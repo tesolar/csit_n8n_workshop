@@ -1,0 +1,108 @@
+# ------------------------------------------------------------
+# OS / Editor
+# ------------------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+~$*
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ------------------------------------------------------------
+# Python cache / bytecode
+# ------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# ------------------------------------------------------------
+# Packaging / build artifacts
+# ------------------------------------------------------------
+.Python
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-wheel-metadata/
+
+# ------------------------------------------------------------
+# Test / lint / type-check artifacts
+# ------------------------------------------------------------
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# ------------------------------------------------------------
+# Virtual environments
+# ------------------------------------------------------------
+.venv/
+venv/
+ENV/
+env/
+
+# ------------------------------------------------------------
+# Jupyter / data-science temp
+# ------------------------------------------------------------
+.ipynb_checkpoints/
+
+# ------------------------------------------------------------
+# Local secrets / env overrides
+# ------------------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# ------------------------------------------------------------
+# Logs / runtime temp files
+# ------------------------------------------------------------
+*.log
+logs/
+tmp/
+temp/
+.history
+
+# ------------------------------------------------------------
+# Docker / container local overrides
+# ------------------------------------------------------------
+docker-compose.override.yml
+
+# ------------------------------------------------------------
+# Project-specific generated artifacts
+# ------------------------------------------------------------
+# Auto-generated training artifact from 1_Student_Risk_clf APIs
+1_Student_Risk_clf/student_risk_model.pkl
+
+# Optional local exports/backups
+n8n_export_*.json
+n8n_backup_*

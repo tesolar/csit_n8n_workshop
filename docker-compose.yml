@@ -1,0 +1,111 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ${COMPOSE_PROJECT_NAME:-csit_n8n}_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-n8n}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-n8npass}
+      POSTGRES_DB: ${POSTGRES_DB:-n8n}
+      TZ: ${TZ:-Asia/Bangkok}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - n8n_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  n8n:
+    build:
+      context: .
+      dockerfile: n8n.Dockerfile
+      args:
+        N8N_VERSION: "latest"
+    image: csit-n8n-workshop-n8n:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-csit_n8n}_app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database Backend Settings
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-n8n}
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_USER: ${POSTGRES_USER:-n8n}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:-n8npass}
+      DB_POSTGRESDB_POOL_SIZE: 10
+
+      # Network & URL Settings
+      N8N_HOST: ${N8N_HOST:-localhost}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
+      WEBHOOK_URL: ${WEBHOOK_URL:-http://localhost:5678/}
+      N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL:-http://localhost:5678/}
+      N8N_SECURE_COOKIE: ${N8N_SECURE_COOKIE:-false}
+
+      # Execution & Logging Settings
+      EXECUTIONS_PROCESS: main
+      EXECUTIONS_MODE: regular
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: 720
+      EXECUTIONS_DATA_SAVE_ON_ERROR: all
+      EXECUTIONS_DATA_SAVE_ON_SUCCESS: all
+      EXECUTIONS_DATA_SAVE_ON_PROGRESS: "true"
+      EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS: "true"
+
+      # Timezone & Security
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE:-Asia/Bangkok}
+      TZ: ${TZ:-Asia/Bangkok}
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:-n8n-secret-encryption-key-for-workshop-32chars}
+      N8N_COMMUNITY_PACKAGES_ENABLED: "true"
+
+      # Code Node Permissions (Python & JS)
+      NODE_FUNCTION_ALLOW_EXTERNAL: requests,math,datetime
+      NODE_FUNCTION_ALLOW_BUILTIN: "*"
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - n8n_network
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-csit_n8n}_pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@workshop.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-adminpass}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      TZ: ${TZ:-Asia/Bangkok}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    networks:
+      - n8n_network
+    restart: unless-stopped
+
+networks:
+  n8n_network:
+    name: ${COMPOSE_PROJECT_NAME:-csit_n8n}_network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: ${COMPOSE_PROJECT_NAME:-csit_n8n}_postgres_data
+  n8n_data:
+    name: ${COMPOSE_PROJECT_NAME:-csit_n8n}_data
+  pgadmin_data:
+    name: ${COMPOSE_PROJECT_NAME:-csit_n8n}_pgadmin_data
