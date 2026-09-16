@@ -1,0 +1,366 @@
+{
+  "name": "EXM14 - API AI ML",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -96
+      ],
+      "id": "80fa1d27-6445-478e-a4d0-80e28a2b5214",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7bd4f11b-9078-47ad-a567-363413e46f78",
+              "name": "Upper_Age",
+              "value": "=75",
+              "type": "number"
+            },
+            {
+              "id": "84bac745-8ba8-456c-abca-3e9d439f6456",
+              "name": "City_Code",
+              "value": "=1",
+              "type": "number"
+            },
+            {
+              "id": "568fa8c4-5b35-4dfb-9cd7-86aaf64387f6",
+              "name": "Accomodation_Type",
+              "value": "=1",
+              "type": "number"
+            },
+            {
+              "id": "583d4dcd-a521-4595-9ae4-6492d5c372b5",
+              "name": "Is_Spouse",
+              "value": "=1",
+              "type": "number"
+            },
+            {
+              "id": "ac337361-b1b6-47e7-9d1e-8bf632e16298",
+              "name": "Reco_Insurance_Type",
+              "value": "=1",
+              "type": "number"
+            },
+            {
+              "id": "5b31a419-b23f-47c7-a28e-56edae2c4d86",
+              "name": "Reco_Insurance_Type",
+              "value": "=1",
+              "type": "number"
+            },
+            {
+              "id": "316ea991-4ed3-42eb-bd87-cd31f7d3bd86",
+              "name": "Health Indicator",
+              "value": "=4",
+              "type": "number"
+            },
+            {
+              "id": "c18ebc20-7e1a-4879-85c6-22497c6e5170",
+              "name": "Holding_Policy_Duration",
+              "value": "=9",
+              "type": "number"
+            },
+            {
+              "id": "f0d79c35-3485-494c-9530-de952f037be3",
+              "name": "Reco_Policy_Cat",
+              "value": "=17",
+              "type": "number"
+            },
+            {
+              "id": "f4c89050-0b61-48e5-8b5d-32d565e92b34",
+              "name": "Reco_Policy_Premium",
+              "value": "=30000",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -176,
+        -192
+      ],
+      "id": "14382f40-1243-4405-95ed-2e23d8d1fd34",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://candidsandbox.com/tli-api/predict",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "Upper_Age",
+              "value": "={{ $json.Upper_Age }}"
+            },
+            {
+              "name": "City_Code",
+              "value": "={{ $json.City_Code }}"
+            },
+            {
+              "name": "Accomodation_Type",
+              "value": "={{ $json.Accomodation_Type }}"
+            },
+            {
+              "name": "Is_Spouse",
+              "value": "={{ $json.Is_Spouse }}"
+            },
+            {
+              "name": "Reco_Insurance_Type",
+              "value": "={{ $json.Reco_Insurance_Type }}"
+            },
+            {
+              "name": "Health Indicator",
+              "value": "={{ $json[\"Health Indicator\"] }}"
+            },
+            {
+              "name": "Holding_Policy_Duration",
+              "value": "={{ $json.Holding_Policy_Duration }}"
+            },
+            {
+              "name": "Reco_Policy_Cat",
+              "value": "={{ $json.Reco_Policy_Cat }}"
+            },
+            {
+              "name": "Reco_Policy_Premium",
+              "value": "={{ $json.Reco_Policy_Premium }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        48,
+        -192
+      ],
+      "id": "d43c356d-694a-4930-8ae8-34e4ae558721",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "content": "### © 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+        "height": 156,
+        "width": 1112,
+        "color": 4
+      },
+      "id": "dde27d28-6fa4-4da5-b26a-39b747b30832",
+      "name": "Copyright Notice",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        -384
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1R25UCp-bi-5KxKBLfJNkujWjPkfWVqc_nEgo0zriLvM",
+          "mode": "list",
+          "cachedResultName": "xgboost_test_model_input",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1R25UCp-bi-5KxKBLfJNkujWjPkfWVqc_nEgo0zriLvM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1678414976,
+          "mode": "list",
+          "cachedResultName": "test_model_input",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1R25UCp-bi-5KxKBLfJNkujWjPkfWVqc_nEgo0zriLvM/edit#gid=1678414976"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -176,
+        0
+      ],
+      "id": "0659b8f5-e8c1-4eed-897c-2ce91cae8f4e",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "P3lLYJdhCQzsVc1E",
+          "name": "Google Sheets account [TK]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "maxItems": 20
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        48,
+        0
+      ],
+      "id": "b9f91e2e-c897-47a9-8908-6b6fb2875791",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://candidsandbox.com/tli-api/predict",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "Upper_Age",
+              "value": "={{ $json.Upper_Age }}"
+            },
+            {
+              "name": "City_Code",
+              "value": "={{ $json.City_Code }}"
+            },
+            {
+              "name": "Accomodation_Type",
+              "value": "={{ $json.Accomodation_Type }}"
+            },
+            {
+              "name": "Is_Spouse",
+              "value": "={{ $json.Is_Spouse }}"
+            },
+            {
+              "name": "Reco_Insurance_Type",
+              "value": "={{ $json.Reco_Insurance_Type }}"
+            },
+            {
+              "name": "Health Indicator",
+              "value": "={{ $json[\"Health Indicator\"] }}"
+            },
+            {
+              "name": "Holding_Policy_Duration",
+              "value": "={{ $json.Holding_Policy_Duration }}"
+            },
+            {
+              "name": "Reco_Policy_Cat",
+              "value": "={{ $json.Reco_Policy_Cat }}"
+            },
+            {
+              "name": "Reco_Policy_Premium",
+              "value": "={{ $json.Reco_Policy_Premium }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        272,
+        0
+      ],
+      "id": "987b30c3-f982-4ba3-aec6-fba65596878b",
+      "name": "HTTP Request1"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "Upper_Age": null,
+          "City_Code": null,
+          "Accomodation_Type": null,
+          "Is_Spouse": null,
+          "Reco_Insurance_Type": null,
+          "Health Indicator": null,
+          "Holding_Policy_Duration": null,
+          "Reco_Policy_Cat": null,
+          "Reco_Policy_Premium": null
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "eb7ebbda-d1ce-4742-ada1-96774cf3bc77",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "SigE_cQbnQibxFbRWXHn7",
+  "tags": []
+}

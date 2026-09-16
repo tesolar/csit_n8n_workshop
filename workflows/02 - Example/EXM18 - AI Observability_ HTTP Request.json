@@ -1,0 +1,483 @@
+{
+    "name":  "EXM18 - AI Observability: HTTP Request",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "jsCode":  "/*\n * Candid GRC Co., Ltd.\n * Copyright Â© 2026 Candid GRC Co., Ltd.\n * All Rights Reserved.\n *\n * This source code is proprietary and confidential.\n * Unauthorized copying, modification, redistribution,\n * reverse engineering, or commercial use is strictly prohibited.\n *\n * This code forms part of the Candid GRC Automation Framework.\n */\n\nconst now = new Date();\nconst body = $json.body || {};\nconst prompt =\n  body.prompt ||\n  body.message ||\n  $json.prompt ||\n  $json.message ||\n  $input.first().json.chatInput ||\n  \"\";\n\nif (!String(prompt).trim()) {\n  throw new Error(\"Missing prompt/message in request body\");\n}\n\nconst sessionId = body.sessionId || body.session_id || \"session-\" + Date.now();\nconst userId = body.userId || body.user_id || \"anonymous\";\nconst requestId = body.requestId || \"req-\" + Date.now();\n\nreturn [\n  {\n    json: {\n      requestId: String(requestId),\n      sessionId: String(sessionId),\n      userId: String(userId),\n      model: body.model || \"models/gemini-2.5-flash\",\n      chatInput: String(prompt),\n      startTs: now.getTime(),\n      timestamp: now.toISOString(),\n      source: \"chat\",\n    },\n  },\n];\n"
+                                     },
+                      "id":  "41f111b1-363a-4b00-909a-9f503ebe9c03",
+                      "name":  "Prepare Input + Start Timer",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       480,
+                                       2288
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "/*\n * Candid GRC Co., Ltd.\n * Copyright © 2026 Candid GRC Co., Ltd.\n * All Rights Reserved.\n *\n * This source code is proprietary and confidential.\n * Unauthorized copying, modification, redistribution,\n * reverse engineering, or commercial use is strictly prohibited.\n *\n * This code forms part of the Candid GRC Automation Framework.\n */\n\nconst req = $(\"Prepare Input + Start Timer\").first().json;\nconst out = $input.first().json || {};\n\n// -- Helper: extract token usage from any node output -------------------------\nfunction safeNodeJsonItems(nodeName) {\n  try {\n    return $(nodeName).all().map((item) =\u003e item.json || {});\n  } catch (e) { return []; }\n}\n\nconst modelItems = safeNodeJsonItems(\"Gemini 2.5 Flash\");\n\nfunction findUsage(obj, depth = 0) {\n  if (!obj || typeof obj !== \"object\" || depth \u003e 5) return null;\n  const candidates = [\n    obj.tokenUsage, obj.usageMetadata, obj.usage,\n    obj.response?.usageMetadata, obj.response_metadata?.usage,\n    obj.metadata?.usageMetadata, obj.metadata?.tokenUsage,\n    obj.additional_kwargs?.usage, obj.additional_kwargs?.usageMetadata,\n    obj.data?.usageMetadata, obj.data?.usage,\n  ].filter(Boolean);\n  for (const c of candidates) { if (typeof c === \"object\") return c; }\n  for (const value of Object.values(obj)) {\n    if (value \u0026\u0026 typeof value === \"object\") {\n      const found = findUsage(value, depth + 1);\n      if (found) return found;\n    }\n  }\n  return null;\n}\n\nfunction firstUsageFromItems(items) {\n  for (let i = items.length - 1; i \u003e= 0; i--) {\n    const found = findUsage(items[i]);\n    if (found) return found;\n  }\n  return null;\n}\n\nfunction toNum(v, d = 0) {\n  const n = Number(v);\n  return Number.isFinite(n) ? n : d;\n}\n\n// Token usage: prefer chat-model node, fallback to HTTP response usageMetadata\nconst usageFromChatModel = firstUsageFromItems(modelItems) || {};\nconst usageFromHttp = findUsage(out) || {};\nconst usage = Object.keys(usageFromChatModel).length ? usageFromChatModel : usageFromHttp;\n\nconst inputTokens = toNum(\n  usage.promptTokens ?? usage.promptTokenCount ?? usage.inputTokens ??\n  usage.prompt_tokens ?? usage.input_tokens, 0);\nconst outputTokens = toNum(\n  usage.completionTokens ?? usage.candidatesTokenCount ?? usage.outputTokens ??\n  usage.completion_tokens ?? usage.output_tokens, 0);\nconst totalTokens = toNum(\n  usage.totalTokens ?? usage.totalTokenCount ?? usage.total_tokens ?? usage.totalToken,\n  inputTokens + outputTokens);\n\nlet tokenSource = \"not-available\";\nif (Object.keys(usageFromChatModel).length) tokenSource = \"chat-model-node\";\nelse if (Object.keys(usageFromHttp).length) tokenSource = \"http-response-metadata\";\n\n// -- Extract + parse structured JSON from Gemini -------------------------------\nfunction extractGeminiText(payload) {\n  const cands = Array.isArray(payload?.candidates) ? payload.candidates : [];\n  for (const candidate of cands) {\n    const parts = Array.isArray(candidate?.content?.parts) ? candidate.content.parts : [];\n    const text = parts.map((p) =\u003e (typeof p?.text === \"string\" ? p.text : \"\")).join(\"\\n\").trim();\n    if (text) return text;\n  }\n  return \"\";\n}\n\nconst rawGeminiText = extractGeminiText(out);\nlet parsed = {};\nif (rawGeminiText) {\n  try {\n    parsed = JSON.parse(rawGeminiText);\n  } catch (e) {\n    // Gemini returned plain text (non-JSON fallback)\n    parsed = { answer: rawGeminiText };\n  }\n}\n\n// -- Observability fields from parsed structured response ----------------------\nconst responseText = String(parsed.answer || rawGeminiText || \"\");\nconst intent = String(parsed.intent || \"\");\nconst confidence = toNum(parsed.confidence, 0);\nconst assumptions = JSON.stringify(Array.isArray(parsed.assumptions) ? parsed.assumptions : []);\nconst evidence = JSON.stringify(Array.isArray(parsed.evidence) ? parsed.evidence : []);\nconst uncertainty = String(parsed.uncertainty || \"\");\nconst limitations = JSON.stringify(Array.isArray(parsed.limitations) ? parsed.limitations : []);\n\nconst claims = Array.isArray(parsed.factual_claims) ? parsed.factual_claims : [];\nconst unsupportedClaims = claims.filter((c) =\u003e {\n  const status = String(c?.support_status || \"\").toLowerCase();\n  return status === \"unsupported\" || status === \"unknown\";\n}).length;\nconst hallucinationRate =\n  claims.length \u003e 0 ? Number((unsupportedClaims / claims.length).toFixed(4)) : null;\n\nconst biasRisk = String(parsed.bias_risk || \"unknown\").toLowerCase();\nconst hallucinationRisk = String(parsed.hallucination_risk || \"unknown\").toLowerCase();\nconst safetyRisk = String(parsed.safety_risk || \"unknown\").toLowerCase();\n\nconst autoNeedsReview =\n  (hallucinationRate !== null \u0026\u0026 hallucinationRate \u003e 0.2) ||\n  biasRisk === \"high\" || hallucinationRisk === \"high\";\nconst needsReview = Boolean(parsed.needs_review) || autoNeedsReview;\nconst reviewReason =\n  parsed.review_reason || (autoNeedsReview ? \"auto-threshold-triggered\" : \"\");\n\nconst latencyMs = Date.now() - Number(req.startTs || Date.now());\n\nreturn [\n  {\n    json: {\n      timestamp: new Date().toISOString(),\n      execution_id: $execution.id,\n      workflow_id: $workflow.id,\n      request_id: req.requestId,\n      user_id: req.userId,\n      session_id: req.sessionId,\n      model: req.model,\n      prompt: req.chatInput,\n      response: responseText,\n      intent,\n      confidence,\n      assumptions,\n      evidence,\n      uncertainty,\n      limitations,\n      factual_claim_count: claims.length,\n      unsupported_claim_count: unsupportedClaims,\n      hallucination_rate: hallucinationRate,\n      hallucination_risk: hallucinationRisk,\n      bias_risk: biasRisk,\n      safety_risk: safetyRisk,\n      needs_review: needsReview,\n      latency_ms: latencyMs,\n      input_tokens: inputTokens,\n      output_tokens: outputTokens,\n      total_tokens: totalTokens,\n      status: \"success\",\n      token_source: tokenSource,\n      review_reason: reviewReason,\n    },\n  },\n];"
+                                     },
+                      "id":  "cb9845e5-b339-4f9c-a4df-4c7d010974bf",
+                      "name":  "Format Observability Log",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       928,
+                                       2288
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "append",
+                                         "documentId":  {
+                                                            "__rl":  true,
+                                                            "value":  "https://docs.google.com/spreadsheets/d/1oMhA1Io5SRZg7rIxW7aJfbBQQCFCtgxlzgizZCLKQPQ/edit?usp=sharing",
+                                                            "mode":  "url"
+                                                        },
+                                         "sheetName":  {
+                                                           "__rl":  true,
+                                                           "value":  "log",
+                                                           "mode":  "name"
+                                                       },
+                                         "columns":  {
+                                                         "mappingMode":  "autoMapInputData",
+                                                         "value":  {
+
+                                                                   },
+                                                         "matchingColumns":  [
+
+                                                                             ],
+                                                         "schema":  [
+                                                                        {
+                                                                            "id":  "timestamp",
+                                                                            "displayName":  "timestamp",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "execution_id",
+                                                                            "displayName":  "execution_id",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "workflow_id",
+                                                                            "displayName":  "workflow_id",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "request_id",
+                                                                            "displayName":  "request_id",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "user_id",
+                                                                            "displayName":  "user_id",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "session_id",
+                                                                            "displayName":  "session_id",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "model",
+                                                                            "displayName":  "model",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "prompt",
+                                                                            "displayName":  "prompt",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "response",
+                                                                            "displayName":  "response",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "intent",
+                                                                            "displayName":  "intent",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "confidence",
+                                                                            "displayName":  "confidence",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "assumptions",
+                                                                            "displayName":  "assumptions",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "evidence",
+                                                                            "displayName":  "evidence",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "uncertainty",
+                                                                            "displayName":  "uncertainty",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "limitations",
+                                                                            "displayName":  "limitations",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "factual_claim_count",
+                                                                            "displayName":  "factual_claim_count",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "unsupported_claim_count",
+                                                                            "displayName":  "unsupported_claim_count",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "hallucination_rate",
+                                                                            "displayName":  "hallucination_rate",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "hallucination_risk",
+                                                                            "displayName":  "hallucination_risk",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "bias_risk",
+                                                                            "displayName":  "bias_risk",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "safety_risk",
+                                                                            "displayName":  "safety_risk",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "needs_review",
+                                                                            "displayName":  "needs_review",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "latency_ms",
+                                                                            "displayName":  "latency_ms",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "input_tokens",
+                                                                            "displayName":  "input_tokens",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "output_tokens",
+                                                                            "displayName":  "output_tokens",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "total_tokens",
+                                                                            "displayName":  "total_tokens",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "status",
+                                                                            "displayName":  "status",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "token_source",
+                                                                            "displayName":  "token_source",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        },
+                                                                        {
+                                                                            "id":  "review_reason",
+                                                                            "displayName":  "review_reason",
+                                                                            "required":  false,
+                                                                            "defaultMatch":  false,
+                                                                            "display":  true,
+                                                                            "type":  "string",
+                                                                            "canBeUsedToMatch":  true
+                                                                        }
+                                                                    ],
+                                                         "attemptToConvertTypes":  false,
+                                                         "convertFieldsToString":  false
+                                                     },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.googleSheets",
+                      "typeVersion":  4.7,
+                      "position":  [
+                                       1152,
+                                       2192
+                                   ],
+                      "id":  "ce58bc11-4ded-40b5-9fdf-62563090af93",
+                      "name":  "Append row in sheet",
+                      "credentials":  {
+                                          "googleSheetsOAuth2Api":  {
+                                                                        "id":  "P3lLYJdhCQzsVc1E",
+                                                                        "name":  "Google Sheets account [TK]"
+                                                                    }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+                                                         "responseMode":  "responseNodes"
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.chatTrigger",
+                      "typeVersion":  1.4,
+                      "position":  [
+                                       256,
+                                       2288
+                                   ],
+                      "id":  "31fad6fd-182f-4132-a1aa-654b72379cae",
+                      "name":  "When chat message received",
+                      "webhookId":  "78b3c2dc-4406-439f-8f4f-8a2fda937e78"
+                  },
+                  {
+                      "parameters":  {
+                                         "message":  "={{ $json.response }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "@n8n/n8n-nodes-langchain.chat",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       1152,
+                                       2384
+                                   ],
+                      "id":  "112108d8-889d-48a3-9022-4ddb843a49cd",
+                      "name":  "Chat",
+                      "webhookId":  "2e7205d9-fe44-4ce3-a283-fbf397a861f0"
+                  },
+                  {
+                      "parameters":  {
+                                         "content":  "### (c) 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+                                         "height":  156,
+                                         "width":  1136,
+                                         "color":  4
+                                     },
+                      "id":  "85aa93a4-f57e-4897-84f9-29f592910a10",
+                      "name":  "Copyright Notice",
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       176,
+                                       1984
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+                                         "sendQuery":  true,
+                                         "queryParameters":  {
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "name":  "key",
+                                                                                        "value":  "AIzaSyCVSYVQP9fXK8Wp_JMrvIFUwQLj949hGYI"
+                                                                                    }
+                                                                                ]
+                                                             },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"system_instruction\": {\n    \"parts\": [\n      {\n        \"text\": \"You are an AI assistant. Always respond ONLY with valid JSON (no markdown, no code fences). The JSON must contain exactly these fields:\\n- answer (string): your actual response\\n- intent (string): detected user intent, e.g. question, task, greeting\\n- confidence (number 0.0-1.0): how confident you are\\n- assumptions (array of strings): assumptions you made\\n- evidence (array of strings): facts or sources you referenced\\n- uncertainty (string): what you are uncertain about\\n- limitations (array of strings): known limitations of your answer\\n- factual_claims (array of {claim: string, support_status: \\\"supported\\\"|\\\"unsupported\\\"|\\\"unknown\\\"})\\n- bias_risk (\\\"low\\\"|\\\"medium\\\"|\\\"high\\\")\\n- hallucination_risk (\\\"low\\\"|\\\"medium\\\"|\\\"high\\\")\\n- safety_risk (\\\"low\\\"|\\\"medium\\\"|\\\"high\\\")\\n- needs_review (boolean)\\n- review_reason (string, empty if needs_review is false)\"\n      }\n    ]\n  },\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"{{ $json.chatInput }}\"\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.7,\n    \"maxOutputTokens\": 1200,\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.4,
+                      "position":  [
+                                       704,
+                                       2288
+                                   ],
+                      "id":  "38c302b1-525d-47cf-bfae-7a8c0aae927a",
+                      "name":  "HTTP Request"
+                  }
+              ],
+    "pinData":  {
+
+                },
+    "connections":  {
+                        "Prepare Input + Start Timer":  {
+                                                            "main":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "HTTP Request",
+                                                                                 "type":  "main",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                        },
+                        "Format Observability Log":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Chat",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          },
+                                                                          {
+                                                                              "node":  "Append row in sheet",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "When chat message received":  {
+                                                           "main":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Prepare Input + Start Timer",
+                                                                                "type":  "main",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                       },
+                        "HTTP Request":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Format Observability Log",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         }
+                    },
+    "active":  false,
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "binaryMode":  "separate",
+                     "availableInMCP":  false
+                 },
+    "versionId":  "c683a579-76a0-4758-a02f-58aca8aa8388",
+    "meta":  {
+                 "instanceId":  "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+             },
+    "id":  "ytP_V0qWjtedtIeU8d1he",
+    "tags":  [
+
+             ]
+}

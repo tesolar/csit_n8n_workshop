@@ -1,0 +1,279 @@
+{
+  "name": "BSC02 - Node Connection",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        64,
+        224
+      ],
+      "id": "13f308b6-bbdd-49b0-9938-e942959880d6",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger Node",
+        "height": 400,
+        "width": 336
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "bec52ce1-3ee6-40c5-aae7-f6013e5a01fe",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "getAllPeople",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.n8nTrainingCustomerDatastore",
+      "typeVersion": 1,
+      "position": [
+        384,
+        224
+      ],
+      "id": "0b5a1f71-adcf-46f3-918f-79cf6957e28b",
+      "name": "Customer Datastore (n8n training)"
+    },
+    {
+      "parameters": {
+        "content": "## Data Source and Process",
+        "height": 400,
+        "width": 544,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        304,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "416cca25-d7d4-47fb-9bed-53eee4439ce7",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Basic02\n__Level:__ Easy\n\n__Order:__ Connect the three nodes together to produce a result that returns only customers located in the US.",
+        "height": 144,
+        "width": 1536,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "0f607c56-9039-4d35-b02d-c188a8d25194",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2f90faf4-025b-470e-aaf2-1aaf11de13ac",
+              "leftValue": "={{ $json.country }}",
+              "rightValue": "US",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        224
+      ],
+      "id": "51c098f1-43bd-412e-91f7-5cb03d757f1d",
+      "name": "Filter 'US' Country"
+    },
+    {
+      "parameters": {
+        "jsCode": "const answer = $input.all().map((j)=>j.json);\nconst expected = [\n  {\n    \"id\": \"23423532\",\n    \"name\": \"Jay Gatsby\",\n    \"email\": \"gatsby@west-egg.com\",\n    \"notes\": \"Keeps asking about a green light??\",\n    \"country\": \"US\",\n    \"created\": \"1925-04-10\"\n  },\n  {\n    \"id\": \"23423534\",\n    \"name\": \"Max Sendak\",\n    \"email\": \"info@in-and-out-of-weeks.org\",\n    \"notes\": \"Keeps rolling his terrible eyes\",\n    \"country\": \"US\",\n    \"created\": \"1963-04-09\"\n  }\n];\n\n\nconst idsB = new Set(answer.map(item => item.id));\nconst matches = expected.filter(item => idsB.has(item.id));\n\nconst corrected = matches.length == expected.length;\nreturn [{corrected:corrected}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        224
+      ],
+      "id": "66250427-ed31-4775-9046-25576201adcc",
+      "name": "Check Answer"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f789da8d-9a67-4782-a886-31c939afe112",
+              "leftValue": "={{ $json.corrected }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1104,
+        224
+      ],
+      "id": "5f365882-e0f4-4448-849b-9651ea7cc433",
+      "name": "Is Correct?"
+    },
+    {
+      "parameters": {
+        "content": "## Check Answer",
+        "height": 400,
+        "width": 624,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        864,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "6f1d80dd-a7db-4926-be32-eb4942328632",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        128
+      ],
+      "id": "aa10b6d8-27f2-4853-b10b-298216f5956b",
+      "name": "✅ Yes, Correct Answer"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        320
+      ],
+      "id": "de1f85a3-b265-4370-a6ef-c2e5aec3cac9",
+      "name": "❌ No, Wrong Answer"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "Customer Datastore (n8n training)": {
+      "main": [
+        []
+      ]
+    },
+    "Check Answer": {
+      "main": [
+        [
+          {
+            "node": "Is Correct?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Correct?": {
+      "main": [
+        [
+          {
+            "node": "✅ Yes, Correct Answer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ No, Wrong Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter 'US' Country": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e0419f4b-b697-452e-b568-be90f869f1a3",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "sh-m6-efQLsB7iFCWEwSL",
+  "tags": [
+    {
+      "updatedAt": "2026-02-06T04:08:50.539Z",
+      "createdAt": "2026-02-06T04:08:50.539Z",
+      "id": "bV84VYB2WRB2bwyr",
+      "name": "Basic"
+    },
+    {
+      "updatedAt": "2026-02-16T04:29:24.755Z",
+      "createdAt": "2026-02-16T04:29:24.755Z",
+      "id": "2RTwF3PSzSj7aZvH",
+      "name": "Practice"
+    }
+  ]
+}

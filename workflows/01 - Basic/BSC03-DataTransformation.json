@@ -1,0 +1,539 @@
+{
+  "name": "BSC03 - Data Transformation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        464
+      ],
+      "id": "a4237bd6-b567-421e-8346-7b4a016d8383",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger Node",
+        "height": 400,
+        "width": 288
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -144,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "f1f0b771-7a3e-4f93-a592-fc29f7dd09f7",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Data Source",
+        "height": 400,
+        "width": 288,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        160,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "a8099583-e1aa-42d8-b8e8-3663ce2bc1d8",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Basic03\n__Level:__ Easy\n\n__Order:__ จัดการข้อมูลตัวอย่างในค่า `premium` ที่มีค่าว่าง (null) ให้กลายเป็น 0 ด้วย Edit Fields Node\n\n__Goal:__ การเลือกใช้ Node ต่าง ๆ และการเชื่อมต่อระหว่าง Node \n\n__Practice:__  การแก้ไขข้อมูลที่ส่งผ่านกันระหว่าง Node\n\n__Guide:__ เชื่อมต่อ Node ที่อยู่ใน Process เรียงลำดับการเชื่อมต่อให้ถูกต้อง แล้วตรวจคำตอบด้วยการ ลาก Node สุดท้ายใน Process ไปเชื่อมต่อกับ Node ที่ชื่อ Check Answer เพื่อตรวจสอบความถูกต้อง\nคุณต้องตรวจหาค่า `premium` ที่เป็น null ก่อน แล้วจึงแยกค่าเหล่านั้นไป แก้ไข ให้เป็น 0 แล้วจึงนำมาประกอบกับค่าปกติ จึงเป็นคำตอบสุดท้าย\n\n\n",
+        "height": 384,
+        "width": 1840,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -144,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "5d9e87fa-036c-4235-b9eb-ba515b412c15",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Process",
+        "height": 400,
+        "width": 592,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        464,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "941ee112-65b5-4333-9946-8ce266ec7c9b",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    \"user_id\": \"U001\",\n    \"age\": 24,\n    \"height\": 168,\n    \"weight\": 60,\n    \"salary\": 22000,\n    \"premium\": null\n  },\n  {\n    \"user_id\": \"U002\",\n    \"age\": 29,\n    \"height\": 172,\n    \"weight\": 70,\n    \"salary\": 32000,\n    \"premium\": 1800\n  },\n  {\n    \"user_id\": \"U003\",\n    \"age\": 35,\n    \"height\": 165,\n    \"weight\": 68,\n    \"salary\": 45000,\n    \"premium\": 2500\n  },\n  {\n    \"user_id\": \"U004\",\n    \"age\": 41,\n    \"height\": 170,\n    \"weight\": 75,\n    \"salary\": 52000,\n    \"premium\": null\n  },\n  {\n    \"user_id\": \"U005\",\n    \"age\": 33,\n    \"height\": 160,\n    \"weight\": 55,\n    \"salary\": 38000,\n    \"premium\": 2100\n  },\n  {\n    \"user_id\": \"U006\",\n    \"age\": 27,\n    \"height\": 175,\n    \"weight\": 72,\n    \"salary\": 29000,\n    \"premium\": 1600\n  },\n  {\n    \"user_id\": \"U007\",\n    \"age\": 46,\n    \"height\": 168,\n    \"weight\": 78,\n    \"salary\": 60000,\n    \"premium\": 3200\n  },\n  {\n    \"user_id\": \"U008\",\n    \"age\": 52,\n    \"height\": 162,\n    \"weight\": 70,\n    \"salary\": 72000,\n    \"premium\": null\n  },\n  {\n    \"user_id\": \"U009\",\n    \"age\": 31,\n    \"height\": 180,\n    \"weight\": 85,\n    \"salary\": 41000,\n    \"premium\": 2300\n  },\n  {\n    \"user_id\": \"U010\",\n    \"age\": 22,\n    \"height\": 158,\n    \"weight\": 50,\n    \"salary\": 18000,\n    \"premium\": null\n  },\n  {\n    \"user_id\": \"U011\",\n    \"age\": 38,\n    \"height\": 173,\n    \"weight\": 74,\n    \"salary\": 48000,\n    \"premium\": 2600\n  },\n  {\n    \"user_id\": \"U012\",\n    \"age\": 44,\n    \"height\": 169,\n    \"weight\": 69,\n    \"salary\": 55000,\n    \"premium\": 3000\n  },\n  {\n    \"user_id\": \"U013\",\n    \"age\": 28,\n    \"height\": 166,\n    \"weight\": 63,\n    \"salary\": 31000,\n    \"premium\": null\n  },\n  {\n    \"user_id\": \"U014\",\n    \"age\": 50,\n    \"height\": 171,\n    \"weight\": 80,\n    \"salary\": 68000,\n    \"premium\": 3500\n  },\n  {\n    \"user_id\": \"U015\",\n    \"age\": 34,\n    \"height\": 164,\n    \"weight\": 67,\n    \"salary\": 42000,\n    \"premium\": 2400\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        464
+      ],
+      "id": "f6164ef4-3452-47de-a79f-f524e9d44596",
+      "name": "Example Customer Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const answer = $input.all().map((j)=>j.json);\nconst expected = [\n  {\n    \"user_id\": \"U001\",\n    \"age\": 24,\n    \"height\": 168,\n    \"weight\": 60,\n    \"salary\": 22000,\n    \"premium\": 0\n  },\n  {\n    \"user_id\": \"U002\",\n    \"age\": 29,\n    \"height\": 172,\n    \"weight\": 70,\n    \"salary\": 32000,\n    \"premium\": 1800\n  },\n  {\n    \"user_id\": \"U003\",\n    \"age\": 35,\n    \"height\": 165,\n    \"weight\": 68,\n    \"salary\": 45000,\n    \"premium\": 2500\n  },\n  {\n    \"user_id\": \"U004\",\n    \"age\": 41,\n    \"height\": 170,\n    \"weight\": 75,\n    \"salary\": 52000,\n    \"premium\": 0\n  },\n  {\n    \"user_id\": \"U005\",\n    \"age\": 33,\n    \"height\": 160,\n    \"weight\": 55,\n    \"salary\": 38000,\n    \"premium\": 2100\n  },\n  {\n    \"user_id\": \"U006\",\n    \"age\": 27,\n    \"height\": 175,\n    \"weight\": 72,\n    \"salary\": 29000,\n    \"premium\": 1600\n  },\n  {\n    \"user_id\": \"U007\",\n    \"age\": 46,\n    \"height\": 168,\n    \"weight\": 78,\n    \"salary\": 60000,\n    \"premium\": 3200\n  },\n  {\n    \"user_id\": \"U008\",\n    \"age\": 52,\n    \"height\": 162,\n    \"weight\": 70,\n    \"salary\": 72000,\n    \"premium\": 0\n  },\n  {\n    \"user_id\": \"U009\",\n    \"age\": 31,\n    \"height\": 180,\n    \"weight\": 85,\n    \"salary\": 41000,\n    \"premium\": 2300\n  },\n  {\n    \"user_id\": \"U010\",\n    \"age\": 22,\n    \"height\": 158,\n    \"weight\": 50,\n    \"salary\": 18000,\n    \"premium\": 0\n  },\n  {\n    \"user_id\": \"U011\",\n    \"age\": 38,\n    \"height\": 173,\n    \"weight\": 74,\n    \"salary\": 48000,\n    \"premium\": 2600\n  },\n  {\n    \"user_id\": \"U012\",\n    \"age\": 44,\n    \"height\": 169,\n    \"weight\": 69,\n    \"salary\": 55000,\n    \"premium\": 3000\n  },\n  {\n    \"user_id\": \"U013\",\n    \"age\": 28,\n    \"height\": 166,\n    \"weight\": 63,\n    \"salary\": 31000,\n    \"premium\": 0\n  },\n  {\n    \"user_id\": \"U014\",\n    \"age\": 50,\n    \"height\": 171,\n    \"weight\": 80,\n    \"salary\": 68000,\n    \"premium\": 3500\n  },\n  {\n    \"user_id\": \"U015\",\n    \"age\": 34,\n    \"height\": 164,\n    \"weight\": 67,\n    \"salary\": 42000,\n    \"premium\": 2400\n  }\n];\n\n\nconst idsB = new Set(answer.map(item => item.id));\nconst matches = expected.filter(item => idsB.has(item.id));\n\nconst corrected = matches.length == expected.length;\nreturn [{corrected:corrected}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        464
+      ],
+      "id": "1abce45e-e8cf-49d8-8919-0852070867ff",
+      "name": "Check Answer"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f789da8d-9a67-4782-a886-31c939afe112",
+              "leftValue": "={{ $json.premium }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        480
+      ],
+      "id": "c67e68f2-7c81-4e2f-99fe-e1be103caf14",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        912,
+        480
+      ],
+      "id": "db26c0d8-8b1e-46fe-a4a5-441b7a12ec21",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f789da8d-9a67-4782-a886-31c939afe112",
+              "leftValue": "={{ $json.corrected }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1312,
+        464
+      ],
+      "id": "deb66aa5-7a34-47f7-a8f3-8596f6e94510",
+      "name": "Is Correct?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2d715ed2-8305-452f-8891-9ac4433bfb17",
+              "name": "premium",
+              "value": "=0",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        480
+      ],
+      "id": "4b7d6523-86b2-4c7c-bd67-ab23a31ad975",
+      "name": "Edit Fields 'premium' to 0"
+    },
+    {
+      "parameters": {
+        "content": "## Check Answer",
+        "height": 400,
+        "width": 624,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1072,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "adb6c542-d912-4ead-b61d-f1c3af143338",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1504,
+        368
+      ],
+      "id": "e0670d9c-24af-492b-b415-a1ac2f419a51",
+      "name": "✅ Yes, Correct Answer"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1504,
+        560
+      ],
+      "id": "5e68b1c3-808a-4ce8-84f4-84be3e3b6e02",
+      "name": "❌ No, Wrong Answer"
+    }
+  ],
+  "pinData": {
+    "Example Customer Data": [
+      {
+        "json": {
+          "user_id": "U001",
+          "age": 24,
+          "height": 168,
+          "weight": 60,
+          "salary": 22000,
+          "premium": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U002",
+          "age": 29,
+          "height": 172,
+          "weight": 70,
+          "salary": 32000,
+          "premium": 1800
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U003",
+          "age": 35,
+          "height": 165,
+          "weight": 68,
+          "salary": 45000,
+          "premium": 2500
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U004",
+          "age": 41,
+          "height": 170,
+          "weight": 75,
+          "salary": 52000,
+          "premium": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U005",
+          "age": 33,
+          "height": 160,
+          "weight": 55,
+          "salary": 38000,
+          "premium": 2100
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U006",
+          "age": 27,
+          "height": 175,
+          "weight": 72,
+          "salary": 29000,
+          "premium": 1600
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U007",
+          "age": 46,
+          "height": 168,
+          "weight": 78,
+          "salary": 60000,
+          "premium": 3200
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U008",
+          "age": 52,
+          "height": 162,
+          "weight": 70,
+          "salary": 72000,
+          "premium": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U009",
+          "age": 31,
+          "height": 180,
+          "weight": 85,
+          "salary": 41000,
+          "premium": 2300
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U010",
+          "age": 22,
+          "height": 158,
+          "weight": 50,
+          "salary": 18000,
+          "premium": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U011",
+          "age": 38,
+          "height": 173,
+          "weight": 74,
+          "salary": 48000,
+          "premium": 2600
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U012",
+          "age": 44,
+          "height": 169,
+          "weight": 69,
+          "salary": 55000,
+          "premium": 3000
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U013",
+          "age": 28,
+          "height": 166,
+          "weight": 63,
+          "salary": 31000,
+          "premium": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U014",
+          "age": 50,
+          "height": 171,
+          "weight": 80,
+          "salary": 68000,
+          "premium": 3500
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "user_id": "U015",
+          "age": 34,
+          "height": 164,
+          "weight": 67,
+          "salary": 42000,
+          "premium": 2400
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Example Customer Data": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "Check Answer": {
+      "main": [
+        [
+          {
+            "node": "Is Correct?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        []
+      ]
+    },
+    "Is Correct?": {
+      "main": [
+        [
+          {
+            "node": "✅ Yes, Correct Answer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ No, Wrong Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields 'premium' to 0": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "38a91f8f-1e30-42d8-901d-d93f33a1e57e",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "cb4MBT5tSCwQKHjEAmPYk",
+  "tags": [
+    {
+      "updatedAt": "2026-02-16T04:29:24.755Z",
+      "createdAt": "2026-02-16T04:29:24.755Z",
+      "id": "2RTwF3PSzSj7aZvH",
+      "name": "Practice"
+    },
+    {
+      "updatedAt": "2026-02-06T04:08:50.539Z",
+      "createdAt": "2026-02-06T04:08:50.539Z",
+      "id": "bV84VYB2WRB2bwyr",
+      "name": "Basic"
+    }
+  ]
+}

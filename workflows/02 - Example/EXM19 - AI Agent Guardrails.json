@@ -1,0 +1,773 @@
+{
+  "name": "EXM19 - AI Agent Guardrails",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        560,
+        576
+      ],
+      "id": "44e5c5f6-34b7-4f21-b9e3-90a6d667f55d",
+      "name": "When chat message received",
+      "webhookId": "d62aa2c6-04cc-4a79-b136-30c0f440615d"
+    },
+    {
+      "parameters": {
+        "jsCode": "/*\n * Candid GRC Co., Ltd.\n * Copyright © 2026 Candid GRC Co., Ltd.\n * All Rights Reserved.\n *\n * This source code is proprietary and confidential.\n * Unauthorized copying, modification, redistribution,\n * reverse engineering, or commercial use is strictly prohibited.\n *\n * This code forms part of the Candid GRC Automation Framework.\n */\n\nconst item = $input.first().json || {};\n\nfunction hasViolation(obj, depth = 0) {\n  if (depth > 6 || obj === null || obj === undefined) return false;\n  if (typeof obj === \"boolean\") return obj;\n  if (typeof obj === \"string\") {\n    const t = obj.toLowerCase();\n    return (\n      t.includes(\"violation\") ||\n      t.includes(\"blocked\") ||\n      t.includes(\"unsafe\") ||\n      t.includes(\"redact\")\n    );\n  }\n  if (typeof obj === \"number\") return false;\n  if (Array.isArray(obj)) return obj.some((v) => hasViolation(v, depth + 1));\n\n  const directKeys = [\n    \"hasViolation\",\n    \"isViolation\",\n    \"violated\",\n    \"blocked\",\n    \"isBlocked\",\n    \"unsafe\",\n    \"redacted\",\n    \"guardrailTriggered\",\n    \"piiDetected\",\n  ];\n\n  for (const key of directKeys) {\n    if (key in obj && typeof obj[key] === \"boolean\") return obj[key];\n  }\n\n  if (\n    \"violations\" in obj &&\n    Array.isArray(obj.violations) &&\n    obj.violations.length > 0\n  )\n    return true;\n  if (\"matches\" in obj && Array.isArray(obj.matches) && obj.matches.length > 0)\n    return true;\n\n  return Object.values(obj).some((v) => hasViolation(v, depth + 1));\n}\n\nreturn [\n  {\n    json: {\n      ...item,\n      hasGuardrailViolation: hasViolation(item),\n      guardrailStage: \"input\",\n    },\n  },\n];\n"
+      },
+      "id": "fdbadc9c-0784-4e79-994e-48438e6cf057",
+      "name": "Detect Input Guardrail Violation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "10bc95ea-0945-4e72-8e89-c4e0e7f8ab6b",
+              "leftValue": "={{ $json.hasGuardrailViolation }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "10d5bac8-9ee5-43fd-9141-8a07c5048c46",
+      "name": "Input Is Blocked?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1360,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4bd8d47f-88de-40da-8f2f-9da3298f0a79",
+              "name": "output",
+              "value": "Your message may contain sensitive personal data. Please remove it and try again.",
+              "type": "string"
+            },
+            {
+              "id": "16473ba9-b8f0-4b9d-baea-aa4a0678ba58",
+              "name": "guardrailStatus",
+              "value": "blocked_input",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "68b1f3c6-4709-4194-a35a-ac53d74796ce",
+      "name": "Blocked Input Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1776,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.output || $json.text || $json.response || $json.answer || '' }}",
+        "guardrails": {
+          "nsfw": {
+            "value": {
+              "threshold": 0.7
+            }
+          },
+          "pii": {
+            "value": {
+              "type": "selected",
+              "entities": [
+                "EMAIL_ADDRESS",
+                "PHONE_NUMBER",
+                "LOCATION",
+                "IP_ADDRESS",
+                "CREDIT_CARD"
+              ]
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.guardrails",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        720
+      ],
+      "id": "189b595c-3931-4bfe-8d1f-9a0f05b21358",
+      "name": "Output Guardrails"
+    },
+    {
+      "parameters": {
+        "jsCode": "/*\n * Candid GRC Co., Ltd.\n * Copyright © 2026 Candid GRC Co., Ltd.\n * All Rights Reserved.\n *\n * This source code is proprietary and confidential.\n * Unauthorized copying, modification, redistribution,\n * reverse engineering, or commercial use is strictly prohibited.\n *\n * This code forms part of the Candid GRC Automation Framework.\n */\n\nconst item = $input.first().json || {};\n\nfunction hasViolation(obj, depth = 0) {\n  if (depth > 6 || obj === null || obj === undefined) return false;\n  if (typeof obj === \"boolean\") return obj;\n  if (typeof obj === \"string\") {\n    const t = obj.toLowerCase();\n    return (\n      t.includes(\"violation\") ||\n      t.includes(\"blocked\") ||\n      t.includes(\"unsafe\") ||\n      t.includes(\"redact\")\n    );\n  }\n  if (typeof obj === \"number\") return false;\n  if (Array.isArray(obj)) return obj.some((v) => hasViolation(v, depth + 1));\n\n  const directKeys = [\n    \"hasViolation\",\n    \"isViolation\",\n    \"violated\",\n    \"blocked\",\n    \"isBlocked\",\n    \"unsafe\",\n    \"redacted\",\n    \"guardrailTriggered\",\n    \"piiDetected\",\n  ];\n\n  for (const key of directKeys) {\n    if (key in obj && typeof obj[key] === \"boolean\") return obj[key];\n  }\n\n  if (\n    \"violations\" in obj &&\n    Array.isArray(obj.violations) &&\n    obj.violations.length > 0\n  )\n    return true;\n  if (\"matches\" in obj && Array.isArray(obj.matches) && obj.matches.length > 0)\n    return true;\n\n  return Object.values(obj).some((v) => hasViolation(v, depth + 1));\n}\n\nreturn [\n  {\n    json: {\n      ...item,\n      hasGuardrailViolation: hasViolation(item),\n      guardrailStage: \"output\",\n    },\n  },\n];\n"
+      },
+      "id": "2cb5a988-522b-4ea3-afda-68c030862ccf",
+      "name": "Detect Output Guardrail Violation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2528,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a3c27f6a-bf73-4a30-8fd8-8a7f783c8c11",
+              "leftValue": "={{ $json.hasGuardrailViolation }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "baf5980f-a7fa-4c2d-bdbf-4a1998d53f92",
+      "name": "Output Is Blocked?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2752,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "932ca442-c5c0-43ea-b017-05674f124f45",
+              "name": "output",
+              "value": "I adjusted this response to avoid exposing sensitive personal information.",
+              "type": "string"
+            },
+            {
+              "id": "f7c5095d-1cc1-4f36-9b3a-fb335a5ec513",
+              "name": "guardrailStatus",
+              "value": "blocked_output",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b3ef3f9f-5df6-4529-b07a-77d22d6f0d8f",
+      "name": "Blocked Output Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2976,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2110b4f0-9f18-4b41-8a24-8feecbd8fa7e",
+              "name": "output",
+              "value": "={{ $json.output || $json.text || $json.response || $json.answer || $json.guardrailsInput || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "74f8f2f9-a95f-43ab-8951-46cf59400573",
+              "name": "guardrailStatus",
+              "value": "safe",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "155482de-6a68-49e8-b3bc-e87699ee8777",
+      "name": "Safe Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2976,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.guardrailsInput }}",
+        "options": {
+          "systemMessage": "=You are a general-purpose AI Assistant designed to help users answer questions and solve problems across a wide range of topics.\n\nCore Responsibilities:\n1. Provide clear, concise, and accurate answers\n2. Respond in the same language as the user\n3. If information is insufficient, ask clarifying questions politely\n\nTool Usage Capabilities:\n* You can use SearXNG to search for information on the internet\n* You can use Browserless to open webpages, read content, and extract detailed information\n* Use these tools when:\n  * The query requires up-to-date information\n  * You are uncertain about the answer\n  * Additional verification or deeper context is needed\n\nTool Usage Guidelines:\n* Start with SearXNG to identify relevant sources\n* Use Browserless to retrieve and analyze webpage content when necessary\n* Synthesize information from multiple sources objectively\n\nResponse Style:\n* Use structured and easy-to-read language\n* Break down complex answers into sections\n* Provide step-by-step instructions when applicable\n* Ensure answers are actionable and practical\n\nCurrent Date Time is {{ $now.format('DD/MM/YYYY HH:mm') }}"
+        }
+      },
+      "id": "3ffa0374-6f3c-4339-8e41-e2e502b26095",
+      "cid": "Ikx1Y2FzIFBleXJpbiI",
+      "name": "Your First AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "creator": "Lucas Peyrin",
+      "position": [
+        1712,
+        720
+      ],
+      "typeVersion": 2.2,
+      "notes": "© 2025 Lucas Peyrin"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 30
+      },
+      "id": "d1b0ecf2-d71f-49de-91e2-b36464d59ec0",
+      "cid": "Ikx1Y2FzIFBleXJpbiI",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "creator": "Lucas Peyrin",
+      "position": [
+        1712,
+        944
+      ],
+      "typeVersion": 1.3,
+      "notes": "© 2025 Lucas Peyrin"
+    },
+    {
+      "parameters": {
+        "content": "### (c) 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+        "height": 156,
+        "width": 1136,
+        "color": 4
+      },
+      "id": "fa560100-4ce2-4ca2-874b-94a4dc4f5d3b",
+      "name": "Copyright Notice",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        432,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Workflow Overview\n\nFlow นี้สาธิตการใส่ guardrails ทั้งก่อนและหลัง AI Agent เพื่อป้องกันข้อมูลส่วนบุคคลและเนื้อหาที่ไม่เหมาะสม โดยจะตรวจ input ก่อนส่งเข้า agent และตรวจ output ซ้ำอีกครั้งก่อนปล่อยคำตอบกลับผู้ใช้.",
+        "height": 176,
+        "width": 1200,
+        "color": 7
+      },
+      "id": "3222b566-6a44-4db4-a54e-1bb35eedec15",
+      "name": "Overview Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        432,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1) รับข้อความจากผู้ใช้\n\n`When chat message received` คือจุดเริ่มต้นของ workflow สำหรับรับข้อความจากหน้า chat แล้วส่งต่อไปยังชุดตรวจสอบ input guardrails ทันที เพื่อไม่ให้ข้อความเสี่ยงหลุดเข้า agent โดยตรง.",
+        "height": 196,
+        "width": 304,
+        "color": 5
+      },
+      "id": "ff9f2d06-ab50-4135-b863-7b4b6be7198c",
+      "name": "Trigger Stage Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        384,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2) ตรวจ input guardrails\n\n`Input Guardrails` ใช้ PII detector และ custom privacy classifier เพื่อตรวจว่าข้อความมีข้อมูลระบุตัวบุคคลหรือไม่\n\n`Gemini Input Guardrails` เป็นโมเดลที่ช่วยประมวลผล guardrails\n`Detect Input Guardrail Violation` สรุปผลเป็น `hasGuardrailViolation`\n`Input Is Blocked?` แยกทางระหว่างข้อความที่ต้องบล็อกกับข้อความที่ผ่านได้\n`Blocked Input Response` ส่งข้อความแจ้งเตือนกลับเมื่อ input ไม่ปลอดภัย",
+        "height": 324,
+        "width": 672,
+        "color": 6
+      },
+      "id": "b081c169-525f-4bc0-bfe1-ac69ad32a3c1",
+      "name": "Input Guardrails Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        800,
+        976
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3) ให้ AI Agent ตอบคำถาม\n\nถ้า input ผ่าน guardrails, flow จะเข้า `Your First AI Agent`\n\n`Google Gemini Chat Model` เป็น LLM หลัก\n`Conversation Memory` เก็บบริบทสนทนา\n`Call 'SUB02 - Web Search (SearXNG)'` และ `Call 'SUB03 - Web Scraping (Browserless.io)'` เป็น tools สำหรับค้นข้อมูลล่าสุดและดึงเนื้อหาจากเว็บเมื่อ agent ต้องการข้อมูลเพิ่ม",
+        "height": 292,
+        "width": 576,
+        "color": 3
+      },
+      "id": "a070cd55-2613-4266-a864-5d78d2c965da",
+      "name": "Agent Stage Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        1088
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4) ตรวจ output guardrails\n\nหลัง agent สร้างคำตอบแล้ว `Output Guardrails` จะตรวจซ้ำเพื่อกัน PII และ NSFW content ในคำตอบ\n\n`Google Output Guardrails` คือโมเดลสำหรับขั้นตอนนี้\n`Detect Output Guardrail Violation` แปลงผลเป็น flag เดียว\n`Output Is Blocked?` ใช้ตัดสินใจว่าคำตอบควรถูกบล็อกหรือปล่อยผ่าน",
+        "height": 276,
+        "width": 688,
+        "color": 4
+      },
+      "id": "87b8d831-9f2e-434b-a0aa-633eec7891a4",
+      "name": "Output Guardrails Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2176,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Guardrails Options Guide\n\nใช้โน้ตนี้เป็นคู่มือเลือก option ใน Guardrails node\n\n`Keywords` กรองด้วยคำต้องห้ามที่กำหนดเอง เช่น `hack`, `illegal`\n`Personal Data (PII)` ตรวจข้อมูลระบุตัวตน เช่น email, เบอร์โทร, ที่อยู่\n`Jailbreak` ตรวจความพยายามหลุดข้อจำกัดของ AI เช่น `ignore previous instructions`\n`NSFW` ตรวจเนื้อหาไม่เหมาะสม เช่น sexual, violence, toxic\n`Secret Keys` ตรวจข้อมูลลับ เช่น API key, token, password\n`Topical Alignment` ตรวจว่าข้อความยังอยู่ในขอบเขตหัวข้อที่กำหนด เช่น bot insurance\n`URLs` ตรวจลิงก์ในข้อความ เช่น phishing หรือ suspicious link\n`Custom` เขียนกฎเองด้วย LLM โดยใช้ prompt และ threshold\n`Custom Regex` เขียน pattern ตรวจเอง เช่น `\\d{13}` สำหรับเลขบัตรประชาชน\n\nแนวทางใช้งาน: เริ่มจาก PII + Secret Keys + NSFW ก่อน แล้วค่อยเพิ่ม Custom หรือ Regex สำหรับ policy เฉพาะองค์กร",
+        "height": 452,
+        "width": 736,
+        "color": 7
+      },
+      "id": "dc9b6e7b-2d61-4cb4-a9a2-4405fd5857a8",
+      "name": "Guardrails Options Guide",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        992
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5) เลือกคำตอบสุดท้าย\n\n`Blocked Output Response` ใช้เมื่อ output มีความเสี่ยง ระบบจะส่งข้อความที่ปลอดภัยแทน\n`Safe Response` ใช้เมื่อผลลัพธ์ผ่าน guardrails แล้ว โดยดึงข้อความจาก output/response/answer เดิมและระบุ `guardrailStatus` เป็น `safe`",
+        "height": 212,
+        "width": 432,
+        "color": 2
+      },
+      "id": "85fa1a47-d146-4326-8234-1f9732191505",
+      "name": "Final Response Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3200,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to search something from internet",
+        "workflowId": {
+          "__rl": true,
+          "value": "W5ipBnO5f1i-6mUH7gf4C",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/W5ipBnO5f1i-6mUH7gf4C",
+          "cachedResultName": "SUB02 - Web Search (SearXNG)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "keyword": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('keyword', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "keyword"
+          ],
+          "schema": [
+            {
+              "id": "keyword",
+              "displayName": "keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1840,
+        944
+      ],
+      "id": "564c8914-0c80-4d82-882b-1251cf39710d",
+      "name": "Call 'SUB02 - Web Search (SearXNG)'"
+    },
+    {
+      "parameters": {
+        "description": "Use this tool to retrieve the web content of the provided URL.",
+        "workflowId": {
+          "__rl": true,
+          "value": "IcpY5Faanovw4F4_rDq8F",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/IcpY5Faanovw4F4_rDq8F",
+          "cachedResultName": "SUB03 - Web Scraping (Browserless.io)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('url', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "url"
+          ],
+          "schema": [
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        1968,
+        944
+      ],
+      "id": "34ded68b-039f-4556-8471-f03af2243d0e",
+      "name": "Call 'SUB03 - Web Scraping (Browserless.io)'"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.chatInput }}",
+        "guardrails": {
+          "pii": {
+            "value": {
+              "type": "selected",
+              "entities": [
+                "EMAIL_ADDRESS",
+                "PHONE_NUMBER",
+                "LOCATION",
+                "IP_ADDRESS",
+                "CREDIT_CARD"
+              ]
+            }
+          },
+          "custom": {
+            "guardrail": [
+              {
+                "name": "PII Extended Detection",
+                "threshold": 0.7,
+                "prompt": "=You are a strict privacy and personal data classifier.\n\nYour task is to detect whether the following user input contains ANY personally identifiable information (PII), including but not limited to:\n\n- Person names (first name, last name, full name)\n- Thai national ID or any identification numbers\n- Email addresses\n- Phone numbers\n- Home or work addresses\n- GPS or location references\n- IP addresses\n- Credit card or financial information\n- Usernames, account IDs, or profile identifiers\n- Any combination of data that could identify a person\n\nScoring:\n- 0 = definitely contains PII (unsafe)\n- 0.5 = possibly contains PII\n- 1 = no PII (safe)\n\nBe strict. If unsure, lean towards unsafe."
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.guardrails",
+      "typeVersion": 2,
+      "position": [
+        784,
+        576
+      ],
+      "id": "28f33640-7796-476c-87db-c93ddb6ed12c",
+      "name": "Input Guardrails"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        864,
+        800
+      ],
+      "id": "92314c16-95c9-4a90-8e11-8529651fc290",
+      "name": "Gemini Input Guardrails",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KCNl8nll2LdXHyBa",
+          "name": "Google Gemini(PaLM) Api account [TK]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        944
+      ],
+      "id": "089c1f2a-eb6f-47ca-84a5-0f181f1d173d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KCNl8nll2LdXHyBa",
+          "name": "Google Gemini(PaLM) Api account [TK]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2256,
+        944
+      ],
+      "id": "4fa8cf2e-7c36-457a-877f-0e2beb83b35d",
+      "name": "Google Output Guardrails",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KCNl8nll2LdXHyBa",
+          "name": "Google Gemini(PaLM) Api account [TK]"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Input Guardrails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Input Guardrail Violation": {
+      "main": [
+        [
+          {
+            "node": "Input Is Blocked?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Is Blocked?": {
+      "main": [
+        [
+          {
+            "node": "Blocked Input Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Your First AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Guardrails": {
+      "main": [
+        [
+          {
+            "node": "Detect Output Guardrail Violation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Detect Output Guardrail Violation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Output Guardrail Violation": {
+      "main": [
+        [
+          {
+            "node": "Output Is Blocked?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Output Is Blocked?": {
+      "main": [
+        [
+          {
+            "node": "Blocked Output Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Safe Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Your First AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Your First AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Output Guardrails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'SUB02 - Web Search (SearXNG)'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Your First AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'SUB03 - Web Scraping (Browserless.io)'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Your First AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Guardrails": {
+      "main": [
+        [
+          {
+            "node": "Detect Input Guardrail Violation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Detect Input Guardrail Violation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Input Guardrails": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Input Guardrails",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Your First AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Output Guardrails": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Output Guardrails",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "dd574c26-2af0-4746-9e51-9651e85daf2d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "Z4RN4rrIPUgauKG8Zq1-6",
+  "tags": []
+}

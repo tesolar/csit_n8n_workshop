@@ -1,0 +1,157 @@
+{
+  "name": "EXM08 - Web Scraping",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        208,
+        384
+      ],
+      "id": "8eb0de44-9557-4ea3-aa83-b17b0e128332",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Extract the scraped data and organize it nicely\n * Makes it easy to understand what was found\n */\n\n// Create empty result structure\nconst result = {\n  url: $('When clicking ‘Execute workflow’').first().json.url,\n  title: null,\n  h1_headings: [],\n  h2_headings: [],\n  paragraphs: [],\n};\n\n// Loop through each selector's results\nconst data = $json.data || \"\";\n\nfor (const item of data) {\n  const selector = item.selector;\n  const results = item.results || [];\n\n  // Extract title\n  if (selector === \"title\" && results.length > 0) {\n    result.title = (results[0].text || \"\").trim();\n  }\n\n  // Extract H1 headings\n  else if (selector === \"h1\") {\n    result.h1_headings = results\n      .map((r) => (r.text || \"\").trim())\n      .filter((text) => text.length > 0);\n  }\n\n  // Extract H2 headings\n  else if (selector === \"h2\") {\n    result.h2_headings = results\n      .map((r) => (r.text || \"\").trim())\n      .filter((text) => text.length > 0);\n  }\n\n  // Extract paragraphs (limit to first 10)\n  else if (selector === \"p\") {\n    result.paragraphs = results\n      .map((r) => (r.text || \"\").trim())\n      .filter((text) => text.length > 0)\n      .slice(0, 10); // Only keep first 10 paragraphs\n  }\n}\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        384
+      ],
+      "id": "216dd20d-00ab-42dc-b8ff-dea95e9e6407",
+      "name": "Clean data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://browserless:3000/scrape",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $json.url }}\",\n  \"gotoOptions\": {\n    \"waitUntil\": \"networkidle0\",\n    \"timeout\": 60000\n  },\n  \"elements\": [\n    {\"selector\": \"title\"},\n    {\"selector\": \"h1\"},\n    {\"selector\": \"h2\"},\n    {\"selector\": \"p\"}\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        640,
+        384
+      ],
+      "id": "70733943-cb69-4b6d-96d5-1a356e485c20",
+      "name": "Web Scraping"
+    },
+    {
+      "parameters": {
+        "content": "### 📝 วิธีใช้ Workflow นี้ (Web Scraping)\n\n__Flow__: Manual Trigger -> Edit Fields -> Web Scraping -> Clean data\n\n1) กด Execute workflow\n2) ไปที่ Node __Edit Fields__ แล้วใส่ค่า `url` ที่ต้องการ scrape\n   - ตัวอย่าง: https://candidgrc.com/pages/solutions/\n   - แนะนำให้ใส่ URL แบบเต็มที่ขึ้นต้นด้วย `http://` หรือ `https://`\n3) Node Web Scraping จะยิง POST ไปที่\n   - http://browserless:3000/scrape\n   - ใช้ `{{ $json.url }}` จาก Edit Fields\n   - ดึง selector: title, h1, h2, p\n4) Node Clean data จะจัดรูปผลลัพธ์เป็น\n   - url\n   - title\n   - h1_headings[]\n   - h2_headings[]\n   - paragraphs[] (สูงสุด 10 ย่อหน้า)\n\n__⚠️ หมายเหตุ__\n- ต้องมี browserless service ที่ http://browserless:3000\n- การใส่ URL ผ่าน Edit Fields ช่วยลด error จาก input ไม่ครบ/ผิดรูปแบบ\n- หน้าเว็บบางแห่งกัน bot/ต้อง login อาจได้ข้อมูลไม่ครบ\n- ถ้า data ว่าง ให้ลอง URL อื่นหรือเพิ่ม timeout",
+        "height": 788,
+        "width": 940
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -208
+      ],
+      "id": "e90b04e2-7a2f-458f-8f36-245a824b1dde",
+      "name": "Sticky Note - How to Use"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4f04f479-45bb-4362-b166-1be41785e434",
+              "name": "url",
+              "value": "=https://candidgrc.com/pages/solutions/",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        384
+      ],
+      "id": "44e42cd2-d1b0-4e08-a86c-4d4f7ecedd70",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "### © 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+        "height": 172,
+        "width": 936,
+        "color": 4
+      },
+      "id": "c101380e-f285-4b32-8ea4-ac8675757a5e",
+      "name": "Copyright Notice",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        128,
+        592
+      ]
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "url": "..."
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web Scraping": {
+      "main": [
+        [
+          {
+            "node": "Clean data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Web Scraping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "bb8a174a-75df-4b60-8b2c-1a50d6a62d92",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "wr3gdR_H41GaqIpotNuP0",
+  "tags": []
+}

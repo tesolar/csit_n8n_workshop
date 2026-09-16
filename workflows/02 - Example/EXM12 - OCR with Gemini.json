@@ -1,0 +1,216 @@
+{
+  "name": "EXM12 - OCR with Gemini",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "530fa739-d523-4cba-bce7-cbfad6f12f6a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "https://drive.google.com/file/d/1kDPNiB3RtlgbxxkWSlBAP9hrvClsv4Be/view?usp=sharing",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "265ecc94-a280-472a-9933-7aecf7c0c2ae",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lIazF92y73qsqOPU",
+          "name": "Google Drive account [DC]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "สกัดข้อมูลจากรูปภาพใบเสร็จที่ได้รับ",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "คุณคือผู้เชี่ยวชาญด้านการวิเคราะห์เอกสารทางการเงิน (OCR Specialist) หน้าที่ของคุณคือสกัดข้อมูลจากรูปภาพใบเสร็จที่ได้รับ ให้อยู่ในรูปแบบ JSON ที่มีโครงสร้างชัดเจน\n\nกฎเหล็ก:\n1. หากอ่านข้อความไม่ออก ให้ใส่ค่าเป็น null\n2. สรุปข้อมูลเป็นภาษาไทยในส่วนของชื่อร้านและรายการสินค้า\n3. คืนค่ากลับมาเป็น JSON Object เท่านั้น ห้ามมีคำเกริ่นนำ\n\n",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        512,
+        0
+      ],
+      "id": "319572e1-a83c-40c2-87b0-83aaf4e285e6",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        432,
+        224
+      ],
+      "id": "97f703bb-f52a-4d26-bb9f-c24e3967bfd7",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "PesQLlxhmFqsaWL0",
+          "name": "Google Gemini(PaLM) Api account [DC]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "\n{\n\"store_name\": \"ชื่อร้านค้า\",\n\"date\": \"วันที่ในรูปแบบ YYYY-MM-DD\",\n\"total_amount\": \"ยอดรวมสุทธิ (ตัวเลข)\",\n\"tax_amount\": \"ภาษีมูลค่าเพิ่ม (ถ้ามี)\",\n\"items\": [\n{\"name\": \"ชื่อสินค้า\", \"quantity\": 1, \"price\": 0}\n],\n\"currency\": \"สกุลเงิน (เช่น THB, USD)\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        688,
+        256
+      ],
+      "id": "36bc910f-2772-4a0e-a933-dfbdac851c50",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.output }}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        912,
+        0
+      ],
+      "id": "4dcf1c5c-2a42-43f0-ab3f-f88ce117a806",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "### © 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+        "height": 80,
+        "width": 1112,
+        "color": 4
+      },
+      "id": "7ce4274a-4dbc-4cac-a142-9ecc405a95e4",
+      "name": "Copyright Notice",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### 🧾 AI Receipt OCR Automation\nWorkflow สำหรับดึงข้อมูลจากใบเสร็จอัตโนมัติด้วย Google Gemini AI\n\n---\n#### 🚀 การทำงานของ Workflow (Step-by-Step)\n1. **Trigger:** เริ่มต้นทำงานด้วยมือ (Manual)\n2. **Fetch:** ดาวน์โหลดไฟล์ภาพใบเสร็จจาก Google Drive (ผ่าน URL)\n3. **Process:** ส่งรูปภาพเข้า **AI Agent** เพื่อวิเคราะห์ข้อมูล\n4. **Parse:** ใช้ **Structured Output Parser** เพื่อจัดระเบียบข้อมูลเป็น JSON\n5. **Output:** จัดรูปแบบข้อมูลชุดสุดท้ายที่ Node **Edit Fields** พร้อมใช้งาน\n\n---\n#### ⚠️ ข้อควรระวัง\n* หากใบเสร็จยาวเกินไป หรือภาพเบลอ AI อาจจะคืนค่าเป็น `null` ตามกฎที่ตั้งไว้",
+        "height": 352,
+        "width": 944
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        -400
+      ],
+      "typeVersion": 1,
+      "id": "8d6797bc-ba1e-47b3-8453-de204f96de46",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d81624db-66e0-4584-bc43-251e88813da7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "Aagi02urqNJtmE-aubCFI",
+  "tags": [
+    {
+      "updatedAt": "2026-02-06T04:09:34.751Z",
+      "createdAt": "2026-02-06T04:09:34.751Z",
+      "id": "wLdl3v8jlLGKpxQz",
+      "name": "Example"
+    }
+  ]
+}

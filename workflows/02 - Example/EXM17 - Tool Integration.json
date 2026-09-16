@@ -1,0 +1,495 @@
+{
+  "name": "EXM17 - Tool Integration",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        3360,
+        -224
+      ],
+      "id": "08279389-442f-4bf4-9542-e6d9bbfcd577",
+      "name": "Limit1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        3360,
+        -416
+      ],
+      "id": "a4a431ac-e91d-407a-bd53-406117d16ab2",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "69252de4-dcbe-42ef-b37f-73450b8a4841",
+              "leftValue": "={{ $json.type }}",
+              "rightValue": "url",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3136,
+        -320
+      ],
+      "id": "38be44b2-5349-4606-8c61-2e5ff38495ac",
+      "name": "Is URL?"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3584,
+        -224
+      ],
+      "id": "240ca66b-e8cf-44ca-99d7-92635819d0e1",
+      "name": "Fetch PDF"
+    },
+    {
+      "parameters": {
+        "jsCode": "/*\n * Candid GRC Co., Ltd.\n * Copyright © 2026 Candid GRC Co., Ltd.\n * All Rights Reserved.\n *\n * This source code is proprietary and confidential.\n * Unauthorized copying, modification, redistribution,\n * reverse engineering, or commercial use is strictly prohibited.\n *\n * This code forms part of the Candid GRC Automation Framework.\n */\n\n// Read all incoming items from Parse PDF (Unstructured).\nconst inputItems = $input.all();\nconst textChunks = [];\n\nfor (const item of inputItems) {\n  const payload = item.json || {};\n\n  // Most common Unstructured shape after n8n item-splitting: { text: \"...\" }\n  if (typeof payload.text === \"string\" && payload.text.trim()) {\n    textChunks.push(payload.text.trim());\n    continue;\n  }\n\n  // Some setups return nested arrays/objects.\n  if (Array.isArray(payload.elements)) {\n    for (const el of payload.elements) {\n      if (typeof el?.text === \"string\" && el.text.trim()) {\n        textChunks.push(el.text.trim());\n      }\n    }\n    continue;\n  }\n\n  if (Array.isArray(payload.data)) {\n    for (const el of payload.data) {\n      if (typeof el?.text === \"string\" && el.text.trim()) {\n        textChunks.push(el.text.trim());\n      }\n    }\n  }\n}\n\nconst fullText = textChunks.join(\"\\n\").trim();\n\n// Keep URL only if it is present in the incoming items.\nconst urlItem = inputItems.find((i) => typeof i.json?.url === \"string\" && i.json.url);\nconst url = urlItem ? urlItem.json.url : null;\n\nreturn [{\n  json: {\n    fullText,\n    url,\n  },\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4032,
+        -224
+      ],
+      "id": "2af5d3b1-a316-4bb8-9c7b-879c9ed70162",
+      "name": "Extract PDF Text"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://unstructured-api:8000/general/v0/general",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "strategy",
+              "value": "auto"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3808,
+        -224
+      ],
+      "id": "aa0b4504-0b19-4372-b5ec-4b5c9437c970",
+      "name": "Parse PDF (Unstructured)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://browserless:3000/scrape",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": \"{{ $json.url }}\",\n  \"gotoOptions\": {\n    \"waitUntil\": \"networkidle0\",\n    \"timeout\": 60000\n  },\n  \"elements\": [\n    {\"selector\": \"title\"},\n    {\"selector\": \"h1\"},\n    {\"selector\": \"h2\"},\n    {\"selector\": \"p\"}\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3584,
+        -416
+      ],
+      "id": "9a1d2c44-6208-415c-8f5c-5924a1997d4e",
+      "name": "Web Scraping"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Extract the scraped data and organize it nicely\n * Makes it easy to understand what was found\n */\n\n// Create empty result structure\nconst result = {\n  url: $('When clicking ‘Execute workflow’').first().json.url,\n  title: null,\n  h1_headings: [],\n  h2_headings: [],\n  paragraphs: [],\n};\n\n// Loop through each selector's results\nconst data = $json.data || \"\";\n\nfor (const item of data) {\n  const selector = item.selector;\n  const results = item.results || [];\n\n  // Extract title\n  if (selector === \"title\" && results.length > 0) {\n    result.title = (results[0].text || \"\").trim();\n  }\n\n  // Extract H1 headings\n  else if (selector === \"h1\") {\n    result.h1_headings = results\n      .map((r) => (r.text || \"\").trim())\n      .filter((text) => text.length > 0);\n  }\n\n  // Extract H2 headings\n  else if (selector === \"h2\") {\n    result.h2_headings = results\n      .map((r) => (r.text || \"\").trim())\n      .filter((text) => text.length > 0);\n  }\n\n  // Extract paragraphs (limit to first 10)\n  else if (selector === \"p\") {\n    result.paragraphs = results\n      .map((r) => (r.text || \"\").trim())\n      .filter((text) => text.length > 0)\n      .slice(0, 10); // Only keep first 10 paragraphs\n  }\n}\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3808,
+        -416
+      ],
+      "id": "8470c8f5-f845-4851-9ccb-3d38b8b51bde",
+      "name": "Clean data"
+    },
+    {
+      "parameters": {
+        "content": "### © 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+        "height": 156,
+        "width": 1112,
+        "color": 4
+      },
+      "id": "dcd13336-d3fd-4af7-8f13-b43b7564ac09",
+      "name": "Copyright Notice",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2192,
+        -720
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 1: Trigger + Input Configuration\n\n- เริ่มจาก Manual Trigger เพื่อทดสอบ flow\n- Edit Fields ตั้ง keyword และ language สำหรับการค้นหา\n- ออกแบบให้ปรับ query ได้ง่ายโดยไม่ต้องแก้โหนดค้นหา",
+        "height": 176,
+        "width": 420,
+        "color": 3
+      },
+      "id": "fc3478a9-a447-4d97-b04e-58fb2f64a250",
+      "name": "Note - Trigger and Input",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2192,
+        -528
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 2: Search Candidate Sources\n\n- Search by keyword เรียก SearXNG เพื่อหาแหล่งข้อมูล\n- ดึงผลลัพธ์ top N สำหรับการประมวลผลต่อ\n- โฟกัสแหล่งข้อมูลที่เกี่ยวข้องกับหัวข้อเป้าหมาย",
+        "height": 218,
+        "width": 394,
+        "color": 6
+      },
+      "id": "21d24109-b088-46b0-b888-d222aaa83757",
+      "name": "Note - Search",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2496,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 3: Normalize Search Results\n\n- Extract Contents แปลงผลค้นหาให้อยู่ schema เดียวกัน\n- ตีความ type เป็น url หรือ pdf จากรูปแบบลิงก์\n- ลดความซับซ้อนก่อนเข้า routing",
+        "height": 170,
+        "width": 388,
+        "color": 6
+      },
+      "id": "c0d035b8-b438-47e3-b506-1c56bc3e0b81",
+      "name": "Note - Normalize Results",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        -528
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 4: Route by Content Type\n\n- Is URL? แยกเส้นทาง URL กับ PDF\n- Limit และ Limit1 จำกัดจำนวนรายการต่อเส้นทางเพื่อคุมต้นทุน หรือ เพื่อทดสอบ Flow การทำงาน\n- เหมาะสำหรับทดสอบและป้องกันโหลดเกินช่วงแรก",
+        "height": 224,
+        "width": 302,
+        "color": 3
+      },
+      "id": "eb40b83c-9fa8-45dc-a57f-7b1904f47ec0",
+      "name": "Note - Routing and Control",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3024,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 5A: URL Web Scraping Path\n\n- Web Scraping ดึง title, h1, h2, p จากหน้าเว็บ\n- Clean data จัดระเบียบผลลัพธ์ให้อ่านง่าย\n- จำกัดย่อหน้าเพื่อควบคุม payload สำหรับ downstream",
+        "height": 176,
+        "width": 430,
+        "color": 7
+      },
+      "id": "807cf7d8-b323-47bf-954f-59f420f3224d",
+      "name": "Note - URL Path",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3552,
+        -624
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 5B: PDF Parsing Path\n\n- Fetch PDF ดาวน์โหลดไฟล์จากแหล่งต้นทาง\n- Parse PDF (Unstructured) แยกโครงสร้างข้อความจากไฟล์\n- Extract PDF Text รวมข้อความเป็น fullText สำหรับใช้งานต่อ",
+        "height": 176,
+        "width": 430,
+        "color": 7
+      },
+      "id": "3fab551a-77d5-4575-b986-766488d4acbb",
+      "name": "Note - PDF Path",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3552,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://searxng:8080/search",
+        "options": {},
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "q",
+              "value": "={{ $json.keyword }}"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            },
+            {
+              "name": "language",
+              "value": "={{ $json.language }}"
+            },
+            {
+              "name": "pageno",
+              "value": "1"
+            },
+            {
+              "name": "results_per_page",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "id": "ebf8229d-8606-42bf-942f-da42d2d970de",
+      "name": "Search by keyword",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// items[0].json.results มาจาก SearXNG\nconst results = items[0].json.results;\n\nreturn results.map((r) => {\n  const url = r.url || \"\";\n\n  const title = r.title || \"\";\n\n  const content = r.content || \"\";\n\n  const isPdf =\n    url.endsWith(\".pdf\") || url.includes(\"/pdf\") || url.includes(\"/download\");\n\n  return {\n    json: {\n      url,\n      type: isPdf ? \"pdf\" : \"url\",\n      title,\n      content,\n    },\n  };\n});\n\n\n\n\n"
+      },
+      "id": "fd75007b-c4c8-48ed-89e0-716acd9e52ed",
+      "name": "Extract Contents",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        2912,
+        -320
+      ],
+      "executeOnce": false,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "30ec64cd-2157-4002-bf4b-0fab8a37ec01",
+              "name": "keyword",
+              "value": "=llm guardrails (filetype:pdf OR whitepaper OR guide)",
+              "type": "string"
+            },
+            {
+              "id": "fabe1ee6-795d-48ed-9f4e-df1ff5549765",
+              "name": "language",
+              "value": "=en",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2464,
+        -320
+      ],
+      "id": "e094bc1f-8a78-4a71-abbe-9a487c0f634e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        -320
+      ],
+      "id": "a0c34dfd-e242-4fe3-ac0a-488ff1027c06",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Is URL?": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Limit1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit1": {
+      "main": [
+        [
+          {
+            "node": "Fetch PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch PDF": {
+      "main": [
+        [
+          {
+            "node": "Parse PDF (Unstructured)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse PDF (Unstructured)": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Web Scraping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web Scraping": {
+      "main": [
+        [
+          {
+            "node": "Clean data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search by keyword": {
+      "main": [
+        [
+          {
+            "node": "Extract Contents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Contents": {
+      "main": [
+        [
+          {
+            "node": "Is URL?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Search by keyword",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e3036c98-bd52-455f-b8da-087b39a21b00",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "6dCG8xUpf8qEci7Yd5iZ7",
+  "tags": []
+}

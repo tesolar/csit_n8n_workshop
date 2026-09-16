@@ -1,0 +1,277 @@
+{
+  "name": "BSC09 - STT and TTS",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "speech",
+        "voice": {
+          "__rl": true,
+          "value": "FGY2WhTYpPnrIDTdsKH5",
+          "mode": "list",
+          "cachedResultName": "Laura - Enthusiast, Quirky Attitude"
+        },
+        "text": "={{ $json.message }}",
+        "additionalOptions": {
+          "model": {
+            "__rl": true,
+            "value": "eleven_v3",
+            "mode": "list",
+            "cachedResultName": "Eleven v3"
+          },
+          "outputFormat": "mp3_44100_128",
+          "languageCode": "th",
+          "voiceSettings": "{\n  \"stability\": 0.65,\n  \"similarity_boost\": 0.85,\n  \"style\": 0.35,\n  \"use_speaker_boost\": true,\n  \"speed\": 0.95\n}"
+        },
+        "requestOptions": {}
+      },
+      "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        96
+      ],
+      "id": "088c07b7-5562-4be1-b12d-f401ae46f46c",
+      "name": "Convert text to speech",
+      "credentials": {
+        "elevenLabsApi": {
+          "id": "MD1waS9aXT9NcGTn",
+          "name": "ElevenLabs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "speech",
+        "operation": "speechToText",
+        "additionalOptions": {},
+        "requestOptions": {}
+      },
+      "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
+      "typeVersion": 1,
+      "position": [
+        160,
+        96
+      ],
+      "id": "57c02d01-4ed7-4dad-898e-b9d35ea45d06",
+      "name": "Transcribe audio or video",
+      "credentials": {
+        "elevenLabsApi": {
+          "id": "MD1waS9aXT9NcGTn",
+          "name": "ElevenLabs account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        96
+      ],
+      "id": "60444a0b-46ec-4e81-8a4b-a3699991ba0d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d09fa118-89b2-48bd-a162-16ed11713169",
+              "name": "message",
+              "value": "สวัสดีค่ะ คุณสมชาย โทรจากทีมดูแลลูกค้าของบริษัทประกันนะคะ ไม่ทราบว่าสะดวกคุยสักครู่ไหมคะ",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -288,
+        96
+      ],
+      "id": "24f5fc83-8e8c-4361-985a-26308a77d2b0",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "### © 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+        "height": 156,
+        "width": 1256,
+        "color": 4
+      },
+      "id": "800355bd-3d2f-4489-b2b5-5ce842648391",
+      "name": "Copyright Notice",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        -448
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7eac1ec9-ddef-41ee-b79a-87a26c041a64",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        96
+      ],
+      "id": "41c113bb-f639-4cca-8cd7-31125f9fe1e6",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "content": "## 🎙️ BSC09 — TTS & STT ด้วย ElevenLabs\n\nWorkflow นี้สาธิตการใช้งาน **ElevenLabs** ร่วมกับ n8n สำหรับ 2 ฟีเจอร์หลัก:\n- **🔊 TTS (Text-to-Speech)**: แปลงข้อความเป็นไฟล์เสียง\n- **🎙️ STT (Speech-to-Text)**: ถอดเสียงจากไฟล์เป็นข้อความ\n\n**การทำงาน**: ข้อความภาษาไทย → ไฟล์ MP3 (TTS) → ข้อความที่ถอดได้ (STT)\n\n---\n**📋 Prerequisites — สิ่งที่ต้องมีก่อนเริ่ม**\n1. สมัครบัญชี ElevenLabs ที่ https://elevenlabs.io และรับ **API Key**\n2. เพิ่ม Credentials ใน n8n: **Settings → Credentials → New → ElevenLabs API**\n3. ใส่ API Key แล้ว Save — จากนั้นเลือก Credential นี้ใน ElevenLabs Node ทั้ง 2 ตัว",
+        "height": 588,
+        "width": 1256,
+        "color": 5
+      },
+      "id": "9bef613d-ccb0-44bd-b941-b67e45e73c6b",
+      "name": "📌 Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Step 1 — กำหนดข้อความ (Input)\n\n**ระบุข้อความ** ที่ต้องการแปลงเป็นเสียงในตัวแปร `message`\n\n✏️ **ทดลองแก้ไข**: เปลี่ยนค่า `message` เป็นข้อความอื่น แล้วกด Execute อีกครั้ง\n\n**Output**: `{ message: \"ข้อความภาษาไทย...\" }`",
+        "height": 463,
+        "width": 300,
+        "color": 2
+      },
+      "id": "5ad1dd66-356c-47b8-9ff6-6778672c1c1d",
+      "name": "📝 Step 1: Input Text",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Step 2 — Text-to-Speech (TTS)\n\n**ElevenLabs แปลงข้อความเป็นเสียง**\n\n**การตั้งค่าที่ใช้**:\n- **Voice**: Laura (Enthusiast, Quirky Attitude)\n- **Model**: Eleven v3 (รองรับหลายภาษา รวมภาษาไทย)\n- **Language**: th (ภาษาไทย)\n- **Format**: MP3 44100Hz 128kbps\n\n**Voice Settings (JSON)**:\n- `stability`: ความสม่ำเสมอของเสียง (0–1)\n- `similarity_boost`: ความใกล้เคียง Voice ต้นแบบ (0–1)\n- `style`: ความแสดงออก (0–1)\n- `speed`: ความเร็วในการพูด (0.7–1.2)\n\n**Output**: Binary data (ไฟล์ MP3)",
+        "height": 472,
+        "width": 325,
+        "color": 4
+      },
+      "id": "ded3e573-ad50-4bcf-b099-e39dcaccb349",
+      "name": "🔊 Step 2: TTS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Step 3 — Speech-to-Text (STT)\n\n**ElevenLabs ถอดเสียงเป็นข้อความ**\n\nรับ Binary data (MP3) จาก Step 2 แล้วแปลงกลับเป็นข้อความ\n\n💡 **ใช้ STT กับไฟล์จริงได้จาก**:\n- **Webhook**: รับไฟล์ที่ผู้ใช้อัปโหลด\n- **HTTP Request**: ดาวน์โหลดจาก URL\n- **Google Drive Node**: อ่านไฟล์เสียงจาก Drive\n\nเชื่อมต่อ node เหล่านั้นมายัง STT แทน TTS ได้เลย\n\n**Output**: `{ text: \"ข้อความที่ถอดได้\" }`",
+        "height": 472,
+        "width": 311,
+        "color": 6
+      },
+      "id": "f3ba0732-e5a7-43f9-a315-103148e21c2f",
+      "name": "🎙️ Step 3: STT",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        32,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Step 4 — แสดงผลลัพธ์\n\nดึงเฉพาะ field `text` จาก STT output เพื่อให้ output สะอาดและนำไปใช้ต่อได้ง่าย\n\n**Output**: `{ text: \"...\" }`\n\n💡 **ต่อยอดได้**: นำ `text` ไปใช้กับ\nAI Node, Google Sheets, LINE Notify ฯลฯ",
+        "height": 463,
+        "width": 280,
+        "color": 7
+      },
+      "id": "32a47ac1-9d07-44a0-8bc6-765319fec184",
+      "name": "📤 Step 4: Output",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        352,
+        336
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Convert text to speech",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert text to speech": {
+      "main": [
+        [
+          {
+            "node": "Transcribe audio or video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe audio or video": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ce72af06-4159-4ba5-8b20-d3b102dd6cd1",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "3cAfInAoBhR6UyDQC5CG_",
+  "tags": []
+}

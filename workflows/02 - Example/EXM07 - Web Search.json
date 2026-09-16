@@ -1,0 +1,170 @@
+{
+  "name": "EXM07 - Web Search",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        496,
+        400
+      ],
+      "id": "d51554e4-3008-43d0-abf9-6843f0883ebd",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "30ec64cd-2157-4002-bf4b-0fab8a37ec01",
+              "name": "keyword",
+              "value": "=ต้นหอมคืออะไร",
+              "type": "string"
+            },
+            {
+              "id": "fabe1ee6-795d-48ed-9f4e-df1ff5549765",
+              "name": "language",
+              "value": "=th",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        400
+      ],
+      "id": "c0938fa5-c032-4009-8a7a-604992deedfb",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "### 📝 วิธีใช้ Workflow นี้ (SearXNG)\n1) กด Execute workflow\n2) แก้ค่าใน Edit Fields\n   - keyword: คำค้นที่ต้องการ\n   - language: th หรือ en\n3) ระบบจะค้นผ่าน Search Engine\n   - q={{$json.keyword}}\n   - format=json\n   - language={{$json.language}}\n   - pageno=1, results_per_page=5\n4) Extract URLs จะได้ผลลัพธ์เป็น\n   - url\n   - type (pdf/url)\n   - title\n   - content\n\n__⚠️ หมายเหตุ__\n- ต้องมี service searxng ที่ http://searxng:8080\n- ถ้า results ว่าง ให้ลองเปลี่ยน keyword หรือ language",
+        "height": 620,
+        "width": 1104
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        384,
+        -64
+      ],
+      "id": "e57a4f34-171b-45ea-ab95-58bd3ea26fa3",
+      "name": "Sticky Note - How to Use"
+    },
+    {
+      "parameters": {
+        "functionCode": "// items[0].json.results มาจาก SearXNG\nconst results = items[0].json.results;\n\nreturn results.map((r) => {\n  const url = r.url || \"\";\n\n  const title = r.title || \"\";\n\n  const content = r.content || \"\";\n\n  const isPdf =\n    url.endsWith(\".pdf\") || url.includes(\"/pdf\") || url.includes(\"/download\");\n\n  return {\n    json: {\n      url,\n      type: isPdf ? \"pdf\" : \"url\",\n      title,\n      content,\n    },\n  };\n});\n\n\n\n\n"
+      },
+      "id": "fd7da395-7edd-459e-af6b-1529ffd590a1",
+      "name": "Extract Contents",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        400
+      ],
+      "executeOnce": false,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "url": "http://searxng:8080/search",
+        "options": {},
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "q",
+              "value": "={{ $json.keyword }}"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            },
+            {
+              "name": "language",
+              "value": "={{ $json.language }}"
+            },
+            {
+              "name": "pageno",
+              "value": "1"
+            },
+            {
+              "name": "results_per_page",
+              "value": "5"
+            }
+          ]
+        }
+      },
+      "id": "16f39d32-6cf2-43a6-9953-507f2669e454",
+      "name": "Search by keyword",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        944,
+        400
+      ]
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "keyword": "...",
+          "language": ".."
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Search by keyword",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search by keyword": {
+      "main": [
+        [
+          {
+            "node": "Extract Contents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ec2ba151-a67b-4edb-8565-c97d153828ea",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "GxkeJ7rXJM7e92eZecnoX",
+  "tags": []
+}

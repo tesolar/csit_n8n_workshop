@@ -1,0 +1,527 @@
+{
+  "name": "BSC06 - Google Service",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        384
+      ],
+      "id": "bb3aa454-b91b-4bcd-be14-37b02f5e333d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "N8N Google App Certification",
+        "driveId": {
+          "__rl": true,
+          "value": "=My Drive",
+          "mode": "id"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {
+          "folderColorRgb": "#EA4B71"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        432,
+        464
+      ],
+      "id": "7bea3ab2-ea8c-4b12-b270-d9dfd800f03a",
+      "name": "Create folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lIazF92y73qsqOPU",
+          "name": "Google Drive account [DC]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "38287d84-c197-4ad3-a400-4ce4a6ba6650",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        384
+      ],
+      "id": "b947c978-d68a-4b26-881b-f5e54c7e52db",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "N8N Google App Certification",
+        "filter": {
+          "folderId": {
+            "mode": "list",
+            "value": "root",
+            "cachedResultName": "/ (Root folder)"
+          },
+          "whatToSearch": "folders"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -16,
+        384
+      ],
+      "id": "010c9a97-3268-4b26-bda7-f3316e18b7de",
+      "name": "Search files and folders",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lIazF92y73qsqOPU",
+          "name": "Google Drive account [DC]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "replaceText",
+        "presentationId": "={{ $(\"Copy Template\").item.json.id }}",
+        "textUi": {
+          "textValues": [
+            {
+              "pageObjectIds": [
+                "g3c85e9c6d8c_0_0"
+              ],
+              "text": "[Name]",
+              "replaceText": "={{ $('Name to Replace').item.json.name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSlides",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        384
+      ],
+      "id": "a5acc87d-7735-4480-b683-875f697561a4",
+      "name": "Replace text in a presentation",
+      "credentials": {
+        "googleSlidesOAuth2Api": {
+          "id": "DwGKX1mmiqCRYJFl",
+          "name": "Google Slides account [DC]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5be7a625-97fe-4c21-bc2e-60cea02b78e0",
+              "name": "folderId",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        656,
+        384
+      ],
+      "id": "5820cb0a-aac8-4c76-baed-300cbaeb08e0",
+      "name": "Folder Name"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5be7a625-97fe-4c21-bc2e-60cea02b78e0",
+              "name": "name",
+              "value": "=",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        384
+      ],
+      "id": "cd7b3bc2-bedf-4d55-bd7b-d4266e672243",
+      "name": "Name to Replace"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger Node",
+        "height": 464,
+        "width": 224
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        224
+      ],
+      "typeVersion": 1,
+      "id": "8cb46d71-588c-4eba-adad-e28055974b07",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Basic06\n__Level:__ Easy\n\n__Order:__ ต้องการสร้างไฟล์ Certificate หลายไฟล์ ตามจำนวน row ใน Google Sheets จงสร้าง Credentials Google Sheets account ของคุณเองและตั้งค่า Node \"Get row(s) in sheet\" ให้สามารถดึงข้อมูลจาก Google sheet ที่มีให้ จากนั้นนำ output ที่ได้ไปใส่ฟิลด์ `name` ใน __Node \"Name to Replace\"__\n\n__Goal:__ ไฟล์ PDF __\"Certificate\"__ 10 ไฟล์ หรือ ตามจำนวน row ที่ได้จาก Google sheets ที่ Google Drive ใน Folder ที่ชื่อ __\"N8N Google App Certification\"__ \n\n__Practice:__  การใช้งาน Google Service \n\n\n",
+        "height": 240,
+        "width": 1040,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "432d5c9a-aa9d-4351-a256-ea3614f36f3c",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Workspace",
+        "height": 464,
+        "width": 2064,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -64,
+        224
+      ],
+      "typeVersion": 1,
+      "id": "aee34635-6fcd-4d2f-8eb1-29b867d4e4e1",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1OgoPqvGqST3tew5zLnyBH5wd5nCkJ-2j2lP0LadnG7U"
+        },
+        "name": "N8N Google App Certification Template",
+        "sameFolder": false,
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Folder Name').item.json.folderId || 'root' }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1328,
+        384
+      ],
+      "id": "87d7f320-ef1b-4e4f-ba32-89aa4a093e28",
+      "name": "Copy Template",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lIazF92y73qsqOPU",
+          "name": "Google Drive account [DC]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list",
+          "cachedResultName": "",
+          "cachedResultUrl": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        880,
+        384
+      ],
+      "id": "e958db05-454d-4fd3-80fe-8570430e4ace",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "QA3FDeh1tMqdrBoN",
+          "name": "Google Sheets account [DC]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "rKSyrZR484skwHvT_xuqn",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/rKSyrZR484skwHvT_xuqn",
+          "cachedResultName": "SUB05 - Google Slide to PDF"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "presentationId": "={{ $('Copy Template').item.json.id }}",
+            "outputFileName": "=Certification of {{ $('Name to Replace').item.json.name }}",
+            "folderId": "={{ $('Folder Name').item.json.folderId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "presentationId",
+              "displayName": "presentationId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "outputFileName",
+              "displayName": "outputFileName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "folderId",
+              "displayName": "folderId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1776,
+        384
+      ],
+      "id": "bc421910-3161-40ec-a856-2ecd43664f8a",
+      "name": "Call 'SUB05 - Google Slide to PDF'"
+    },
+    {
+      "parameters": {
+        "content": "## Source \nDocument URL https://docs.google.com/spreadsheets/d/1XP36pLl2Hnfw-3emSXXM1vvcmHyPBMBQc43jgtUaEKU/edit?usp=sharing\nSheet Name: ชีต1",
+        "height": 240,
+        "width": 1248,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        752,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "8dded62c-c841-4c25-a23f-7d42cc80a0d5",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder": {
+      "main": [
+        [
+          {
+            "node": "Folder Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Folder Name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace text in a presentation": {
+      "main": [
+        [
+          {
+            "node": "Call 'SUB05 - Google Slide to PDF'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Folder Name": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Name to Replace": {
+      "main": [
+        [
+          {
+            "node": "Copy Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy Template": {
+      "main": [
+        [
+          {
+            "node": "Replace text in a presentation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Name to Replace",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'SUB05 - Google Slide to PDF'": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9f9ecc29-7c1c-4bc5-a0b5-12183ffca631",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "PODjJUVEa3Cc6TFrG_EeX",
+  "tags": [
+    {
+      "updatedAt": "2026-02-16T04:29:24.755Z",
+      "createdAt": "2026-02-16T04:29:24.755Z",
+      "id": "2RTwF3PSzSj7aZvH",
+      "name": "Practice"
+    },
+    {
+      "updatedAt": "2026-02-06T04:08:50.539Z",
+      "createdAt": "2026-02-06T04:08:50.539Z",
+      "id": "bV84VYB2WRB2bwyr",
+      "name": "Basic"
+    }
+  ]
+}

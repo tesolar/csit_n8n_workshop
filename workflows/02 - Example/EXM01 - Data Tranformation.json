@@ -1,0 +1,1705 @@
+{
+  "name": "EXM01 - Data Tranformation",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const inputs = $input.first().json.results;\nreturn inputs.map((item) => ({\n    title: item.title,\n    url: item.url,\n    content: item.content\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        928
+      ],
+      "id": "84f1840b-f355-44a6-827f-e24b8c2c8de1",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        1120
+      ],
+      "id": "ecec6771-6759-441e-bbbe-9783aeec62c9",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "21432bf1-423c-4ea1-9462-ac1f400496fe",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "087ffb2d-5db0-4652-900a-efbf99c8887c",
+              "name": "url",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "7ef96023-f2fb-4ea3-b410-99e1b91b1c3a",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        1120
+      ],
+      "id": "e7f3f452-0b16-4157-8455-fa524e25419c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "### Get only selected field\nget `title`, `url`, and `content` from search result with two different way but same result\n",
+        "height": 448,
+        "width": 432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        832
+      ],
+      "typeVersion": 1,
+      "id": "56967bdd-37d6-47b8-b5d7-6a3881315728",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        1024
+      ],
+      "id": "350d7219-ac00-4b3b-92f8-b54b6929e770",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "sold",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d51cc43b-580c-474f-98a6-d2a1e22ceb75",
+      "name": "Filter Sold",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        272,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "price",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        512,
+        576
+      ],
+      "id": "b7c5c02e-f1e8-428a-b0db-bd3353c9e310",
+      "name": "Sort By Price"
+    },
+    {
+      "parameters": {
+        "fields": {
+          "values": [
+            {
+              "name": "price",
+              "type": "numberValue",
+              "numberValue": "={{ $json.price.toNumber() }}"
+            },
+            {
+              "name": "is_expensive",
+              "type": "booleanValue",
+              "booleanValue": "={{ $json.price > 20000 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fb7b457f-8494-4aed-93b6-400ee4014868",
+      "name": "Edit Fields (Change type, Add fields)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        16,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# input\n```json\n[\n  {\n    \"product\": \"mouse\",\n    \"price\": \"500\",\n    \"category\": \"electronics\",\n    \"status\": \"pending\"\n  },\n  {\n    \"product\": \"keyboard\",\n    \"price\": \"1200\",\n    \"category\": \"electronics\",\n    \"status\": \"sold\"\n  },\n  {\n    \"product\": \"laptop\",\n    \"price\": \"35000\",\n    \"category\": \"electronics\",\n    \"status\": \"sold\"\n  },\n  {\n    \"product\": \"notebook\",\n    \"price\": \"50\",\n    \"category\": \"stationery\",\n    \"status\": \"sold\"\n  }\n]\n```",
+        "height": 528,
+        "width": 432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -560,
+        16
+      ],
+      "typeVersion": 1,
+      "id": "7327668a-b34d-41c2-913e-e69f433b80db",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# output\n```json\n[\n  {\n    \"product\": \"laptop\",\n    \"price\": 35000,\n    \"category\": \"electronics\",\n    \"status\": \"sold\",\n    \"is_expensive\": true\n  },\n  {\n    \"product\": \"keyboard\",\n    \"price\": 1200,\n    \"category\": \"electronics\",\n    \"status\": \"sold\",\n    \"is_expensive\": false\n  },\n  {\n    \"product\": \"notebook\",\n    \"price\": 50,\n    \"category\": \"stationery\",\n    \"status\": \"sold\",\n    \"is_expensive\": false\n  }\n]\n```",
+        "height": 480,
+        "width": 432
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        512,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "5fdb1909-1d7e-4a4a-98f8-f325a9971ad1",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n    { \"json\": { \"product\": \"mouse\", \"price\": \"500\", \"category\": \"electronics\", \"status\": \"pending\" } },\n    { \"json\": { \"product\": \"keyboard\", \"price\": \"1200\", \"category\": \"electronics\", \"status\": \"sold\" } },\n  { \"json\": { \"product\": \"laptop\", \"price\": \"35000\", \"category\": \"electronics\", \"status\": \"sold\" } },\n    { \"json\": { \"product\": \"notebook\", \"price\": \"50\", \"category\": \"stationery\", \"status\": \"sold\" } }\n]\n;"
+      },
+      "id": "5a551752-858a-4610-a566-79a986a6e39d",
+      "name": "Input Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## This flow is represent of basic how to data with data tranformation nodes",
+        "width": 400,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "2b14569a-034a-4dba-96f8-948ca7dd6e34",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "success": true,
+          "query": "insurance",
+          "results": [
+            {
+              "title": "What Is Insurance? - Investopedia",
+              "url": "https://www.investopedia.com/terms/i/insurance.asp",
+              "content": "Insurance is purchased to provide financial protection or reimbursement against losses resulting from accidents, injury, or property damage. An insurance company pools clients’ risks to make payments more affordable for the insured.",
+              "snippet": "Insurance is purchased to provide financial protection or reimbursement against losses resulting from accidents, injury, or property damage. An insurance company pools clients’ risks to make payments more affordable for the insured."
+            },
+            {
+              "title": "Liberty Mutual: A trusted insurance company for over 100 years",
+              "url": "https://www.libertymutual.com/",
+              "content": "Get a customized insurance quote from one of the nation's largest insurance companies for auto, home, renters, and more and only pay for what you need.",
+              "snippet": "Get a customized insurance quote from one of the nation's largest insurance companies for auto, home, renters, and more and only pay for what you need."
+            },
+            {
+              "title": "รู้ใจประกันภัย เช็คราคา-ปรับแต่งแผนได้เอง ซื้อออนไลน์ 24 ชม.",
+              "url": "https://www.roojai.com/",
+              "content": "เช็คราคาประกันฟรี ใน 60 วิ ราคาดีที่สุดสำหรับทุกคน ทุนประกันสูง คุ้มครองทันที มีแอปเคลมแบบเรียลไทม์ พร้อมบริการช่วยเหลือฉุกเฉิน 24 ชม. · ประกันรถยนต์ · ประกันรถยนต์ไฟฟ้า · Roojai Rewards · ประกัน ...",
+              "snippet": "เช็คราคาประกันฟรี ใน 60 วิ ราคาดีที่สุดสำหรับทุกคน ทุนประกันสูง คุ้มครองทันที มีแอปเคลมแบบเรียลไทม์ พร้อมบริการช่วยเหลือฉุกเฉิน 24 ชม. · ประกันรถยนต์ · ประกันรถยนต์ไฟฟ้า · Roojai Rewards · ประกัน ..."
+            },
+            {
+              "title": "Allstate Insurance Company | You're In Good Hands.",
+              "url": "https://www.allstate.com/",
+              "content": "Get an online insurance quote for quality coverage in the blink of an eye. Allstate offers insurance for your car, home, rental, motorcycle and more.",
+              "snippet": "Get an online insurance quote for quality coverage in the blink of an eye. Allstate offers insurance for your car, home, rental, motorcycle and more."
+            },
+            {
+              "title": "Insurance Quotes for Home, Auto, & Life : Farmers Insurance",
+              "url": "https://www.farmers.com/",
+              "content": "Home, life and car insurance from Farmers Insurance. With car insurance discounts and fast claim service, it&#39;s no wonder over 4000 customers a day switch to Farmers.",
+              "snippet": "Home, life and car insurance from Farmers Insurance. With car insurance discounts and fast claim service, it&#39;s no wonder over 4000 customers a day switch to Farmers."
+            },
+            {
+              "title": "Thanachart Insurance: ธนชาตประกันภัยรถยนต์ ดูแลไวตรงใจคุณ",
+              "url": "https://www.thanachart-insurance.co.th/",
+              "content": "บริษัทประกันวินาศภัยอันดับ 1 พร้อมให้บริการด้านประกันภัยรถยนต์ ตอบโจทย์ความต้องการ ด้วยนวัตกรรมทางผลิตภัณฑ์ ซื้อออนไลน์ได้ 24 ชม. คุ้มครองทันที.",
+              "snippet": "บริษัทประกันวินาศภัยอันดับ 1 พร้อมให้บริการด้านประกันภัยรถยนต์ ตอบโจทย์ความต้องการ ด้วยนวัตกรรมทางผลิตภัณฑ์ ซื้อออนไลน์ได้ 24 ชม. คุ้มครองทันที."
+            },
+            {
+              "title": "สำนักงานคณะกรรมการกำกับและส่งเสริมการประกอบธุรกิจประกันภัย (คปภ.)",
+              "url": "https://www.oic.or.th/th",
+              "content": "176,262ล้าน. ประกันสามัญ · 19,832ล้าน. ประกันชีวิตควบการลงทุน · 62,329ล้าน. ประกันสัญญาเพิ่มเติม · 4,539ล้าน. ประกันชีวิตแบบบำนาญ · 26,134ล้าน. ประกันสุขภาพและโรคร้ายแรง.",
+              "snippet": "176,262ล้าน. ประกันสามัญ · 19,832ล้าน. ประกันชีวิตควบการลงทุน · 62,329ล้าน. ประกันสัญญาเพิ่มเติม · 4,539ล้าน. ประกันชีวิตแบบบำนาญ · 26,134ล้าน. ประกันสุขภาพและโรคร้ายแรง."
+            },
+            {
+              "title": "State Farm® | An Insurance Company Valued For Over 100 Years",
+              "url": "https://www.statefarm.com/",
+              "content": "Explore the options State Farm offers with homeowners insurance from bundling2 and home protection devices to roofing material or wind mitigation discounts.",
+              "snippet": "Explore the options State Farm offers with homeowners insurance from bundling2 and home protection devices to roofing material or wind mitigation discounts."
+            },
+            {
+              "title": "The Zebra: Instantly Compare Insurance Quotes",
+              "url": "https://www.thezebra.com/",
+              "content": "Insurance isn't always black and white — but it is with The Zebra. Compare and buy real-time quotes for auto, home and more, online or with a licensed agent.",
+              "snippet": "Insurance isn't always black and white — but it is with The Zebra. Compare and buy real-time quotes for auto, home and more, online or with a licensed agent."
+            },
+            {
+              "title": "ไทยประกันชีวิต เราให้บริการประกันภัย ประกันสุขภาพ ประกันออมทรัพย์",
+              "url": "https://www.thailife.com/",
+              "content": "บริษัทไทยประกันชีวิต ผู้ให้บริการประกันชีวิต ประกันภัย ประกันสุขภาพ ประกันอุบัติเหตุ แผนประกันชีวิตแบบสะสมทรัพย์ เชิญดูแผนประกันชีวิตที่น่าสนใจ | Thailife.com.",
+              "snippet": "บริษัทไทยประกันชีวิต ผู้ให้บริการประกันชีวิต ประกันภัย ประกันสุขภาพ ประกันอุบัติเหตุ แผนประกันชีวิตแบบสะสมทรัพย์ เชิญดูแผนประกันชีวิตที่น่าสนใจ | Thailife.com."
+            },
+            {
+              "title": "บริษัท ประกันภัยไทยวิวัฒน์ จำกัด (มหาชน)",
+              "url": "https://www.thaivivat.co.th/",
+              "content": "บริษัทประกันภัยชั้นนำในประเทศไทย ผู้นำด้านนวัตกรรมประกันภัย เราให้บริการประกันภัยรถยนต์ ชั้น 1 2+ 3+ ทั้งแบบรายปีและเติมเงิน ประกันเดินทางต่างประเทศไม่ต้องสำรองจ่าย ขอวีซ่าเชงเก้น ...",
+              "snippet": "บริษัทประกันภัยชั้นนำในประเทศไทย ผู้นำด้านนวัตกรรมประกันภัย เราให้บริการประกันภัยรถยนต์ ชั้น 1 2+ 3+ ทั้งแบบรายปีและเติมเงิน ประกันเดินทางต่างประเทศไม่ต้องสำรองจ่าย ขอวีซ่าเชงเก้น ..."
+            },
+            {
+              "title": "Welcome to the Health Insurance Marketplace® | HealthCare.gov",
+              "url": "https://www.healthcare.gov/",
+              "content": "Welcome to the Health Insurance Marketplace®. Official government website.",
+              "snippet": "Welcome to the Health Insurance Marketplace®. Official government website."
+            },
+            {
+              "title": "Get instant insurance quotes - State Farm®",
+              "url": "https://www.statefarm.com/insurance/quotes",
+              "content": "Shopping for auto insurance? Looking to protect your home, condo, or apartment? Exploring life, health, or long-term care coverage? Just choose the product you're looking for and get an insurance rate quote from State Farm®. In addition to car insurance, you can save time, money and hassle by combining the purchase of a homeowners, renters, condo, or life insurance policy, too.",
+              "snippet": "Shopping for auto insurance? Looking to protect your home, condo, or apartment? Exploring life, health, or long-term care coverage? Just choose the product you're looking for and get an insurance rate quote from State Farm®. In addition to car insurance, you can save time, money and hassle by combining the purchase of a homeowners, renters, condo, or life insurance policy, too."
+            },
+            {
+              "title": "ซื้อประกันออนไลน์ ราคาถูกชัวร์ ภายใต้ทิพย กรุ๊ป โฮลดิ้งส์ | insurverse.co.th",
+              "url": "https://insurverse.co.th/",
+              "content": "อินชัวร์เวิร์สซื้อตรง ประกันออนไลน์ เลือกปรับแผนประกันได้เอง เช็คเบี้ยประกันฟรี รู้ราคาทันที เคลมเร็วผ่านแอป อนุมัติไวได้เงินคืนทันใจ.",
+              "snippet": "อินชัวร์เวิร์สซื้อตรง ประกันออนไลน์ เลือกปรับแผนประกันได้เอง เช็คเบี้ยประกันฟรี รู้ราคาทันที เคลมเร็วผ่านแอป อนุมัติไวได้เงินคืนทันใจ."
+            },
+            {
+              "title": "CA Department of Insurance",
+              "url": "https://www.insurance.ca.gov/",
+              "content": "Insurance Commissioner Lara alerts consumers across the state about insurance coverage ahead of winter storms More News »",
+              "snippet": "Insurance Commissioner Lara alerts consumers across the state about insurance coverage ahead of winter storms More News »"
+            },
+            {
+              "title": "Car Insurance - Get a Free Auto Insurance Quote - Nationwide",
+              "url": "https://www.nationwide.com/personal/insurance/auto/",
+              "content": "Protect yourself on the road with auto insurance from Nationwide. Find out about coverage options, discounts and get a free online car insurance quote.",
+              "snippet": "Protect yourself on the road with auto insurance from Nationwide. Find out about coverage options, discounts and get a free online car insurance quote."
+            },
+            {
+              "title": "เอฟดับบลิวดี ประเทศไทย | บริษัทประกันชีวิต ประกันสุขภาพ",
+              "url": "https://www.fwd.co.th/th/",
+              "content": "FWD คือบริษัทประกันชั้นนำของประเทศไทย บริการครอบคลุม ทั้งประกันชีวิต ประกันอุบัติเหตุ ประกันสุขภาพ ประกันสะสมทรัพย์ และประกันควบการลงทุน พร้อมวางแผนประกันแบบมืออาชีพ.",
+              "snippet": "FWD คือบริษัทประกันชั้นนำของประเทศไทย บริการครอบคลุม ทั้งประกันชีวิต ประกันอุบัติเหตุ ประกันสุขภาพ ประกันสะสมทรัพย์ และประกันควบการลงทุน พร้อมวางแผนประกันแบบมืออาชีพ."
+            },
+            {
+              "title": "Travelers: Insurance Coverage and Protection for What Matters Most",
+              "url": "https://www.travelers.com",
+              "content": "Protect your personal and business investments with Travelers Insurance. From auto to homeowners or business insurance, we have the solution to suit your needs.",
+              "snippet": "Protect your personal and business investments with Travelers Insurance. From auto to homeowners or business insurance, we have the solution to suit your needs."
+            },
+            {
+              "title": "Homeowners, Auto, Life, Health and Property Insurance Quotes | USAA",
+              "url": "https://www.usaa.com/inet/wc/insurance-products",
+              "content": "USAA offers competitive rates, award-winning service and a variety of discounts on auto, homeowners, life, property insurance and more. Get a quote today.",
+              "snippet": "USAA offers competitive rates, award-winning service and a variety of discounts on auto, homeowners, life, property insurance and more. Get a quote today."
+            },
+            {
+              "title": "ธนชาตประกันภัย",
+              "url": "https://www.thanachartinsurance.co.th/",
+              "content": "เช็คเบี้ยประกันภัย, ซื้อประกันภัยออนไลน์. ประสงค์ใช้สิทธิ์ลดหย่อนภาษีประกันสุขภาพ คลิก. ช่องทางชำระเงิน.",
+              "snippet": "เช็คเบี้ยประกันภัย, ซื้อประกันภัยออนไลน์. ประสงค์ใช้สิทธิ์ลดหย่อนภาษีประกันสุขภาพ คลิก. ช่องทางชำระเงิน."
+            },
+            {
+              "title": "An Insurance Company You Can Rely On | Progressive",
+              "url": "https://www.progressive.com",
+              "content": "Get an insurance quote in minutes from a top-rated company. Find 24/7 support and insurance for you, your family, and your belongings.",
+              "snippet": "Get an insurance quote in minutes from a top-rated company. Find 24/7 support and insurance for you, your family, and your belongings."
+            },
+            {
+              "title": "An Insurance Company You Can Rely On | Progressive",
+              "url": "https://www.progressive.com/",
+              "content": "Get an insurance quote in minutes from a top-rated company. Find 24/7 support and insurance for you, your family, and your belongings.",
+              "snippet": "Get an insurance quote in minutes from a top-rated company. Find 24/7 support and insurance for you, your family, and your belongings."
+            },
+            {
+              "title": "ซื้อประกันภัย ผ่านช่องทางเคาน์เตอร์เซอร์วิส All​ Insurance",
+              "url": "https://insurance.counterservice.co.th/",
+              "content": "ซื้อประกันออนไลน์ รับกรมธรรม์ได้ทันที. สะดวก รวดเร็ว เพิ่มความอุ่นใจ ด้วยแผนประกันภัยที่คุณต้องการ. บริษัท เคาน์เตอร์เซอร์วิส จำกัด. Website : https://www.counterservice.co.th/th/ ...",
+              "snippet": "ซื้อประกันออนไลน์ รับกรมธรรม์ได้ทันที. สะดวก รวดเร็ว เพิ่มความอุ่นใจ ด้วยแผนประกันภัยที่คุณต้องการ. บริษัท เคาน์เตอร์เซอร์วิส จำกัด. Website : https://www.counterservice.co.th/th/ ..."
+            },
+            {
+              "title": "An Insurance Company For Your Car And More | GEICO",
+              "url": "https://www.geico.com/",
+              "content": "Get insurance from a company that's been trusted since 1936. See how much you can save with GEICO on insurance for your car, motorcycle, and more.",
+              "snippet": "Get insurance from a company that's been trusted since 1936. See how much you can save with GEICO on insurance for your car, motorcycle, and more."
+            },
+            {
+              "title": "Cheap Car Insurance Quotes | Liberty Mutual",
+              "url": "https://www.libertymutual.com/vehicle/auto-insurance/cheap-car-insurance",
+              "content": "Cheap car insurance doesn't have to mean low quality. Find affordable coverage, discounts, and ways to save on your auto insurance now.",
+              "snippet": "Cheap car insurance doesn't have to mean low quality. Find affordable coverage, discounts, and ways to save on your auto insurance now."
+            },
+            {
+              "title": "การประกันภัย",
+              "url": "https://th.wikipedia.org/wiki/%25E0%25B8%2581%25E0%25B8%25B2%25E0%25B8%25A3%25E0%25B8%259B%25E0%25B8%25A3%25E0%25B8%25B0%25E0%25B8%2581%25E0%25B8%25B1%25E0%25B8%2599%25E0%25B8%25A0%25E0%25B8%25B1%25E0%25B8%25A2",
+              "content": "การประกันภัย คือ การบริหารความเสี่ยงภัยวิธีหนึ่ง ซึ่งจะโอนความเสี่ยงภัยของผู้เอาประกันภัยไปสู่บริษัทประกันภัย เมื่อเกิดความเสียหายขึ้น ...",
+              "snippet": "การประกันภัย คือ การบริหารความเสี่ยงภัยวิธีหนึ่ง ซึ่งจะโอนความเสี่ยงภัยของผู้เอาประกันภัยไปสู่บริษัทประกันภัย เมื่อเกิดความเสียหายขึ้น ..."
+            },
+            {
+              "title": "Health insurance | USAGov",
+              "url": "https://www.usa.gov/health-insurance",
+              "content": "Get information on health insurance programs, including Medicaid, Medicare, CHIP, the ACA Health Insurance Marketplace, and COBRA.",
+              "snippet": "Get information on health insurance programs, including Medicaid, Medicare, CHIP, the ACA Health Insurance Marketplace, and COBRA."
+            },
+            {
+              "title": "AAA Auto and Home Insurance | CSAA Insurance Group",
+              "url": "https://csaa-insurance.aaa.com/content/aaa-ie/b2c/en/homepage.html/",
+              "content": "Auto Insurance: Are you covered? Some states require mandatory liability coverage for automobiles. Learn why your coverage is worth holding on to. Read More",
+              "snippet": "Auto Insurance: Are you covered? Some states require mandatory liability coverage for automobiles. Learn why your coverage is worth holding on to. Read More"
+            },
+            {
+              "title": "Insurance - Wikipedia",
+              "url": "https://en.wikipedia.org/wiki/Insurance",
+              "content": "Insurance is a means of protection from financial loss in which, in exchange for a fee, a party agrees to compensate another party in the event of a certain loss, damage, or injury.",
+              "snippet": "Insurance is a means of protection from financial loss in which, in exchange for a fee, a party agrees to compensate another party in the event of a certain loss, damage, or injury."
+            },
+            {
+              "title": "Auto insurance",
+              "url": "https://www.tdi.texas.gov/consumer/auto-insurance.html",
+              "content": "Insurance for young drivers.",
+              "snippet": "Insurance for young drivers."
+            },
+            {
+              "title": "Allstate",
+              "url": "https://en.wikipedia.org/wiki/Allstate",
+              "content": "",
+              "snippet": ""
+            },
+            {
+              "title": "Flood Insurance | FEMA.gov",
+              "url": "https://www.fema.gov/flood-insurance",
+              "content": "The National Flood Insurance Program provides insurance to help reduce the socio-economic impact of floods.",
+              "snippet": "The National Flood Insurance Program provides insurance to help reduce the socio-economic impact of floods."
+            },
+            {
+              "title": "ERGO NEXT Insurance: Small Business Insurance Quotes Online",
+              "url": "https://www.nextinsurance.com/",
+              "content": "Protect your small business with ERGO NEXT Insurance. Fast quotes. Instant coverage with competitive rates. Totally tailored for 1,300+ professions.",
+              "snippet": "Protect your small business with ERGO NEXT Insurance. Fast quotes. Instant coverage with competitive rates. Totally tailored for 1,300+ professions."
+            },
+            {
+              "title": "Insurance and Financial Services Company – Nationwide",
+              "url": "https://www.nationwide.com/",
+              "content": "We protect vehicles, property, pets and events. Personal insurance",
+              "snippet": "We protect vehicles, property, pets and events. Personal insurance"
+            },
+            {
+              "title": "Understanding Your Insurance Policy | Department of Insurance, SC - Official Website",
+              "url": "https://doi.sc.gov/957/Understanding-Your-Insurance-Policy",
+              "content": "An insurance policy is a legal contract between the insurance company (the insurer) and the person(s), business, or entity being insured (the insured). Reading your policy helps you verify that the policy meets your needs and that you understand your and the insurance company’s responsibilities ...",
+              "snippet": "An insurance policy is a legal contract between the insurance company (the insurer) and the person(s), business, or entity being insured (the insured). Reading your policy helps you verify that the policy meets your needs and that you understand your and the insurance company’s responsibilities ..."
+            },
+            {
+              "title": "Life Insurance",
+              "url": "https://www.benefits.va.gov/insurance/",
+              "content": "Veterans Affairs Life Insurance (VALife) became available January 1, 2023 and offers guaranteed acceptance whole life coverage of up to $40,000 to Veterans with service-connected disabilities.",
+              "snippet": "Veterans Affairs Life Insurance (VALife) became available January 1, 2023 and offers guaranteed acceptance whole life coverage of up to $40,000 to Veterans with service-connected disabilities."
+            },
+            {
+              "title": "Louisiana Department of Insurance",
+              "url": "https://ldi.la.gov/",
+              "content": "Find out if you are eligible for wind mitigation premium discounts on your homeowners insurance!",
+              "snippet": "Find out if you are eligible for wind mitigation premium discounts on your homeowners insurance!"
+            },
+            {
+              "title": "Cigna Healthcare | Health Insurance and Dental Plans",
+              "url": "https://www.cigna.com/",
+              "content": "The requested URL was rejected. Please consult with your administrator. Your support ID is: 5940153416088396387 [Go Back]",
+              "snippet": "The requested URL was rejected. Please consult with your administrator. Your support ID is: 5940153416088396387 [Go Back]"
+            }
+          ],
+          "metadata": {
+            "total": 0
+          },
+          "raw": {
+            "query": "insurance",
+            "number_of_results": 0,
+            "results": [
+              {
+                "template": "default.html",
+                "url": "https://www.investopedia.com/terms/i/insurance.asp",
+                "title": "What Is Insurance? - Investopedia",
+                "content": "Insurance is purchased to provide financial protection or reimbursement against losses resulting from accidents, injury, or property damage. An insurance company pools clients’ risks to make payments more affordable for the insured.",
+                "publishedDate": "2005-03-29T00:00:00",
+                "thumbnail": "https://imgs.search.brave.com/4SazIOWAVT1eEwM0C24BXAXmNdHPealq0TFXUXX0eWM/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly93d3cu/aW52ZXN0b3BlZGlh/LmNvbS90aG1iL3Iw/RzhkQ0p4b1VWNXJz/YVRFdVI4bVVVeW1k/ST0vMTUwMHgwL2Zp/bHRlcnM6bm9fdXBz/Y2FsZSgpOm1heF9i/eXRlcygxNTAwMDAp/OnN0cmlwX2ljYygp/L3Rlcm1zX2lfaW5z/dXJhbmNlX0ZJTkFM/Xy0zNTU2MzkzYjNi/YmY0ODNlOWJjOGFk/OWI3MDc2NDFlNC5q/cGc",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.investopedia.com",
+                  "/terms/i/insurance.asp",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "duckduckgo",
+                  "brave"
+                ],
+                "positions": [
+                  12,
+                  1
+                ],
+                "score": 2.1666666666666665,
+                "category": "general",
+                "pubdate": "2005-03-29 00:00:00"
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.libertymutual.com/",
+                "title": "Liberty Mutual: A trusted insurance company for over 100 years",
+                "content": "Get a customized insurance quote from one of the nation's largest insurance companies for auto, home, renters, and more and only pay for what you need.",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.libertymutual.com",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "duckduckgo",
+                  "brave"
+                ],
+                "positions": [
+                  2,
+                  2
+                ],
+                "score": 2,
+                "category": "general"
+              },
+              {
+                "url": "https://www.roojai.com/",
+                "title": "รู้ใจประกันภัย เช็คราคา-ปรับแต่งแผนได้เอง ซื้อออนไลน์ 24 ชม.",
+                "content": "เช็คราคาประกันฟรี ใน 60 วิ ราคาดีที่สุดสำหรับทุกคน ทุนประกันสูง คุ้มครองทันที มีแอปเคลมแบบเรียลไทม์ พร้อมบริการช่วยเหลือฉุกเฉิน 24 ชม. · ประกันรถยนต์ · ประกันรถยนต์ไฟฟ้า · Roojai Rewards · ประกัน ...",
+                "thumbnail": null,
+                "engine": "google",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.roojai.com",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "google"
+                ],
+                "positions": [
+                  1
+                ],
+                "score": 1,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.allstate.com/",
+                "title": "Allstate Insurance Company | You're In Good Hands.",
+                "content": "Get an online insurance quote for quality coverage in the blink of an eye. Allstate offers insurance for your car, home, rental, motorcycle and more.",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.allstate.com",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  1
+                ],
+                "score": 1,
+                "category": "general"
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.farmers.com/",
+                "title": "Insurance Quotes for Home, Auto, & Life : Farmers Insurance",
+                "content": "Home, life and car insurance from Farmers Insurance. With car insurance discounts and fast claim service, it&#39;s no wonder over 4000 customers a day switch to Farmers.",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.farmers.com",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "duckduckgo",
+                  "brave"
+                ],
+                "positions": [
+                  4,
+                  4
+                ],
+                "score": 1,
+                "category": "general"
+              },
+              {
+                "url": "https://www.thanachart-insurance.co.th/",
+                "title": "Thanachart Insurance: ธนชาตประกันภัยรถยนต์ ดูแลไวตรงใจคุณ",
+                "content": "บริษัทประกันวินาศภัยอันดับ 1 พร้อมให้บริการด้านประกันภัยรถยนต์ ตอบโจทย์ความต้องการ ด้วยนวัตกรรมทางผลิตภัณฑ์ ซื้อออนไลน์ได้ 24 ชม. คุ้มครองทันที.",
+                "thumbnail": null,
+                "engine": "google",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.thanachart-insurance.co.th",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "google"
+                ],
+                "positions": [
+                  2
+                ],
+                "score": 0.5,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "url": "https://www.oic.or.th/th",
+                "title": "สำนักงานคณะกรรมการกำกับและส่งเสริมการประกอบธุรกิจประกันภัย (คปภ.)",
+                "content": "176,262ล้าน. ประกันสามัญ · 19,832ล้าน. ประกันชีวิตควบการลงทุน · 62,329ล้าน. ประกันสัญญาเพิ่มเติม · 4,539ล้าน. ประกันชีวิตแบบบำนาญ · 26,134ล้าน. ประกันสุขภาพและโรคร้ายแรง.",
+                "thumbnail": null,
+                "engine": "google",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.oic.or.th",
+                  "/th",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "google"
+                ],
+                "positions": [
+                  3
+                ],
+                "score": 0.3333333333333333,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.statefarm.com/",
+                "title": "State Farm® | An Insurance Company Valued For Over 100 Years",
+                "content": "Explore the options State Farm offers with homeowners insurance from bundling2 and home protection devices to roofing material or wind mitigation discounts.",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.statefarm.com",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  3
+                ],
+                "score": 0.3333333333333333,
+                "category": "general"
+              },
+              {
+                "title": "The Zebra: Instantly Compare Insurance Quotes",
+                "url": "https://www.thezebra.com/",
+                "content": "Insurance isn't always black and white — but it is with The Zebra. Compare and buy real-time quotes for auto, home and more, online or with a licensed agent.",
+                "engine": "duckduckgo",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.thezebra.com",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "thumbnail": "",
+                "priority": "",
+                "engines": [
+                  "duckduckgo"
+                ],
+                "positions": [
+                  3
+                ],
+                "score": 0.3333333333333333,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "url": "https://www.thailife.com/",
+                "title": "ไทยประกันชีวิต เราให้บริการประกันภัย ประกันสุขภาพ ประกันออมทรัพย์",
+                "content": "บริษัทไทยประกันชีวิต ผู้ให้บริการประกันชีวิต ประกันภัย ประกันสุขภาพ ประกันอุบัติเหตุ แผนประกันชีวิตแบบสะสมทรัพย์ เชิญดูแผนประกันชีวิตที่น่าสนใจ | Thailife.com.",
+                "thumbnail": null,
+                "engine": "google",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.thailife.com",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "google"
+                ],
+                "positions": [
+                  4
+                ],
+                "score": 0.25,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "url": "https://www.thaivivat.co.th/",
+                "title": "บริษัท ประกันภัยไทยวิวัฒน์ จำกัด (มหาชน)",
+                "content": "บริษัทประกันภัยชั้นนำในประเทศไทย ผู้นำด้านนวัตกรรมประกันภัย เราให้บริการประกันภัยรถยนต์ ชั้น 1 2+ 3+ ทั้งแบบรายปีและเติมเงิน ประกันเดินทางต่างประเทศไม่ต้องสำรองจ่าย ขอวีซ่าเชงเก้น ...",
+                "thumbnail": null,
+                "engine": "google",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.thaivivat.co.th",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "google"
+                ],
+                "positions": [
+                  5
+                ],
+                "score": 0.2,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.healthcare.gov/",
+                "title": "Welcome to the Health Insurance Marketplace® | HealthCare.gov",
+                "content": "Welcome to the Health Insurance Marketplace®. Official government website.",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.healthcare.gov",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  5
+                ],
+                "score": 0.2,
+                "category": "general"
+              },
+              {
+                "title": "Get instant insurance quotes - State Farm®",
+                "url": "https://www.statefarm.com/insurance/quotes",
+                "content": "Shopping for auto insurance? Looking to protect your home, condo, or apartment? Exploring life, health, or long-term care coverage? Just choose the product you're looking for and get an insurance rate quote from State Farm®. In addition to car insurance, you can save time, money and hassle by combining the purchase of a homeowners, renters, condo, or life insurance policy, too.",
+                "engine": "duckduckgo",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.statefarm.com",
+                  "/insurance/quotes",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "thumbnail": "",
+                "priority": "",
+                "engines": [
+                  "duckduckgo"
+                ],
+                "positions": [
+                  5
+                ],
+                "score": 0.2,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "url": "https://insurverse.co.th/",
+                "title": "ซื้อประกันออนไลน์ ราคาถูกชัวร์ ภายใต้ทิพย กรุ๊ป โฮลดิ้งส์ | insurverse.co.th",
+                "content": "อินชัวร์เวิร์สซื้อตรง ประกันออนไลน์ เลือกปรับแผนประกันได้เอง เช็คเบี้ยประกันฟรี รู้ราคาทันที เคลมเร็วผ่านแอป อนุมัติไวได้เงินคืนทันใจ.",
+                "thumbnail": null,
+                "engine": "google",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "insurverse.co.th",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "google"
+                ],
+                "positions": [
+                  6
+                ],
+                "score": 0.16666666666666666,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.insurance.ca.gov/",
+                "title": "CA Department of Insurance",
+                "content": "Insurance Commissioner Lara alerts consumers across the state about insurance coverage ahead of winter storms More News »",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.insurance.ca.gov",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  6
+                ],
+                "score": 0.16666666666666666,
+                "category": "general"
+              },
+              {
+                "title": "Car Insurance - Get a Free Auto Insurance Quote - Nationwide",
+                "url": "https://www.nationwide.com/personal/insurance/auto/",
+                "content": "Protect yourself on the road with auto insurance from Nationwide. Find out about coverage options, discounts and get a free online car insurance quote.",
+                "engine": "duckduckgo",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.nationwide.com",
+                  "/personal/insurance/auto/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "thumbnail": "",
+                "priority": "",
+                "engines": [
+                  "duckduckgo"
+                ],
+                "positions": [
+                  6
+                ],
+                "score": 0.16666666666666666,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "url": "https://www.fwd.co.th/th/",
+                "title": "เอฟดับบลิวดี ประเทศไทย | บริษัทประกันชีวิต ประกันสุขภาพ",
+                "content": "FWD คือบริษัทประกันชั้นนำของประเทศไทย บริการครอบคลุม ทั้งประกันชีวิต ประกันอุบัติเหตุ ประกันสุขภาพ ประกันสะสมทรัพย์ และประกันควบการลงทุน พร้อมวางแผนประกันแบบมืออาชีพ.",
+                "thumbnail": null,
+                "engine": "google",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.fwd.co.th",
+                  "/th/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "google"
+                ],
+                "positions": [
+                  7
+                ],
+                "score": 0.14285714285714285,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.travelers.com",
+                "title": "Travelers: Insurance Coverage and Protection for What Matters Most",
+                "content": "Protect your personal and business investments with Travelers Insurance. From auto to homeowners or business insurance, we have the solution to suit your needs.",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.travelers.com",
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  7
+                ],
+                "score": 0.14285714285714285,
+                "category": "general"
+              },
+              {
+                "title": "Homeowners, Auto, Life, Health and Property Insurance Quotes | USAA",
+                "url": "https://www.usaa.com/inet/wc/insurance-products",
+                "content": "USAA offers competitive rates, award-winning service and a variety of discounts on auto, homeowners, life, property insurance and more. Get a quote today.",
+                "engine": "duckduckgo",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.usaa.com",
+                  "/inet/wc/insurance-products",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "thumbnail": "",
+                "priority": "",
+                "engines": [
+                  "duckduckgo"
+                ],
+                "positions": [
+                  7
+                ],
+                "score": 0.14285714285714285,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "url": "https://www.thanachartinsurance.co.th/",
+                "title": "ธนชาตประกันภัย",
+                "content": "เช็คเบี้ยประกันภัย, ซื้อประกันภัยออนไลน์. ประสงค์ใช้สิทธิ์ลดหย่อนภาษีประกันสุขภาพ คลิก. ช่องทางชำระเงิน.",
+                "thumbnail": null,
+                "engine": "google",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.thanachartinsurance.co.th",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "google"
+                ],
+                "positions": [
+                  8
+                ],
+                "score": 0.125,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.progressive.com",
+                "title": "An Insurance Company You Can Rely On | Progressive",
+                "content": "Get an insurance quote in minutes from a top-rated company. Find 24/7 support and insurance for you, your family, and your belongings.",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.progressive.com",
+                  "",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  8
+                ],
+                "score": 0.125,
+                "category": "general"
+              },
+              {
+                "title": "An Insurance Company You Can Rely On | Progressive",
+                "url": "https://www.progressive.com/",
+                "content": "Get an insurance quote in minutes from a top-rated company. Find 24/7 support and insurance for you, your family, and your belongings.",
+                "engine": "duckduckgo",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.progressive.com",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "thumbnail": "",
+                "priority": "",
+                "engines": [
+                  "duckduckgo"
+                ],
+                "positions": [
+                  8
+                ],
+                "score": 0.125,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "url": "https://insurance.counterservice.co.th/",
+                "title": "ซื้อประกันภัย ผ่านช่องทางเคาน์เตอร์เซอร์วิส All​ Insurance",
+                "content": "ซื้อประกันออนไลน์ รับกรมธรรม์ได้ทันที. สะดวก รวดเร็ว เพิ่มความอุ่นใจ ด้วยแผนประกันภัยที่คุณต้องการ. บริษัท เคาน์เตอร์เซอร์วิส จำกัด. Website : https://www.counterservice.co.th/th/ ...",
+                "thumbnail": null,
+                "engine": "google",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "insurance.counterservice.co.th",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "google"
+                ],
+                "positions": [
+                  9
+                ],
+                "score": 0.1111111111111111,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.geico.com/",
+                "title": "An Insurance Company For Your Car And More | GEICO",
+                "content": "Get insurance from a company that's been trusted since 1936. See how much you can save with GEICO on insurance for your car, motorcycle, and more.",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.geico.com",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  9
+                ],
+                "score": 0.1111111111111111,
+                "category": "general"
+              },
+              {
+                "title": "Cheap Car Insurance Quotes | Liberty Mutual",
+                "url": "https://www.libertymutual.com/vehicle/auto-insurance/cheap-car-insurance",
+                "content": "Cheap car insurance doesn't have to mean low quality. Find affordable coverage, discounts, and ways to save on your auto insurance now.",
+                "engine": "duckduckgo",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "www.libertymutual.com",
+                  "/vehicle/auto-insurance/cheap-car-insurance",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "thumbnail": "",
+                "priority": "",
+                "engines": [
+                  "duckduckgo"
+                ],
+                "positions": [
+                  9
+                ],
+                "score": 0.1111111111111111,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "url": "https://th.wikipedia.org/wiki/%25E0%25B8%2581%25E0%25B8%25B2%25E0%25B8%25A3%25E0%25B8%259B%25E0%25B8%25A3%25E0%25B8%25B0%25E0%25B8%2581%25E0%25B8%25B1%25E0%25B8%2599%25E0%25B8%25A0%25E0%25B8%25B1%25E0%25B8%25A2",
+                "title": "การประกันภัย",
+                "content": "การประกันภัย คือ การบริหารความเสี่ยงภัยวิธีหนึ่ง ซึ่งจะโอนความเสี่ยงภัยของผู้เอาประกันภัยไปสู่บริษัทประกันภัย เมื่อเกิดความเสียหายขึ้น ...",
+                "thumbnail": null,
+                "engine": "google",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "th.wikipedia.org",
+                  "/wiki/%25E0%25B8%2581%25E0%25B8%25B2%25E0%25B8%25A3%25E0%25B8%259B%25E0%25B8%25A3%25E0%25B8%25B0%25E0%25B8%2581%25E0%25B8%25B1%25E0%25B8%2599%25E0%25B8%25A0%25E0%25B8%25B1%25E0%25B8%25A2",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "google"
+                ],
+                "positions": [
+                  10
+                ],
+                "score": 0.1,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.usa.gov/health-insurance",
+                "title": "Health insurance | USAGov",
+                "content": "Get information on health insurance programs, including Medicaid, Medicare, CHIP, the ACA Health Insurance Marketplace, and COBRA.",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.usa.gov",
+                  "/health-insurance",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  10
+                ],
+                "score": 0.1,
+                "category": "general"
+              },
+              {
+                "title": "AAA Auto and Home Insurance | CSAA Insurance Group",
+                "url": "https://csaa-insurance.aaa.com/content/aaa-ie/b2c/en/homepage.html/",
+                "content": "Auto Insurance: Are you covered? Some states require mandatory liability coverage for automobiles. Learn why your coverage is worth holding on to. Read More",
+                "engine": "duckduckgo",
+                "template": "default.html",
+                "parsed_url": [
+                  "https",
+                  "csaa-insurance.aaa.com",
+                  "/content/aaa-ie/b2c/en/homepage.html/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "thumbnail": "",
+                "priority": "",
+                "engines": [
+                  "duckduckgo"
+                ],
+                "positions": [
+                  10
+                ],
+                "score": 0.1,
+                "category": "general",
+                "publishedDate": null
+              },
+              {
+                "template": "default.html",
+                "url": "https://en.wikipedia.org/wiki/Insurance",
+                "title": "Insurance - Wikipedia",
+                "content": "Insurance is a means of protection from financial loss in which, in exchange for a fee, a party agrees to compensate another party in the event of a certain loss, damage, or injury.",
+                "publishedDate": null,
+                "thumbnail": "https://imgs.search.brave.com/V_UFrme0VDFgqiSJbI1VXTiKuFcHT84-Zj9-AQoWB-M/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly91cGxv/YWQud2lraW1lZGlh/Lm9yZy93aWtpcGVk/aWEvY29tbW9ucy8y/LzJjL0NvYXN0X3Jl/dmlld18lMjgxOTEw/JTI5XyUyODE0NzYw/ODIwOTQxJTI5Lmpw/Zw",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "en.wikipedia.org",
+                  "/wiki/Insurance",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  11
+                ],
+                "score": 0.09090909090909091,
+                "category": "general"
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.tdi.texas.gov/consumer/auto-insurance.html",
+                "title": "Auto insurance",
+                "content": "Insurance for young drivers.",
+                "publishedDate": null,
+                "thumbnail": "https://imgs.search.brave.com/p68HiMev92WF3Yd7sFR8BITbzySLsGw9udylsDi1ssc/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly93d3cu/dGRpLnRleGFzLmdv/di9hcnR3b3JrL3Bh/L2ZhY2Vib29rL2F1/dG8taW5zdXJhbmNl/LmpwZw",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.tdi.texas.gov",
+                  "/consumer/auto-insurance.html",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  13
+                ],
+                "score": 0.07692307692307693,
+                "category": "general"
+              },
+              {
+                "template": "default.html",
+                "url": "https://en.wikipedia.org/wiki/Allstate",
+                "title": "Allstate",
+                "content": "",
+                "publishedDate": null,
+                "thumbnail": "https://imgs.search.brave.com/VKFBECZYGBMJhtC-dcwUwqBbks_YGfiWpizqfSy1Qco/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly91cGxv/YWQud2lraW1lZGlh/Lm9yZy93aWtpcGVk/aWEvY29tbW9ucy90/aHVtYi84Lzg4L0Fs/bHN0YXRlX3dvcmRt/YXJrLnN2Zy8yNTBw/eC1BbGxzdGF0ZV93/b3JkbWFyay5zdmcu/cG5n",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "en.wikipedia.org",
+                  "/wiki/Allstate",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  21
+                ],
+                "score": 0.047619047619047616,
+                "category": "general"
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.fema.gov/flood-insurance",
+                "title": "Flood Insurance | FEMA.gov",
+                "content": "The National Flood Insurance Program provides insurance to help reduce the socio-economic impact of floods.",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.fema.gov",
+                  "/flood-insurance",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  14
+                ],
+                "score": 0.07142857142857142,
+                "category": "general"
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.nextinsurance.com/",
+                "title": "ERGO NEXT Insurance: Small Business Insurance Quotes Online",
+                "content": "Protect your small business with ERGO NEXT Insurance. Fast quotes. Instant coverage with competitive rates. Totally tailored for 1,300+ professions.",
+                "publishedDate": "2020-06-03T00:00:00",
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.nextinsurance.com",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  15
+                ],
+                "score": 0.06666666666666667,
+                "category": "general",
+                "pubdate": "2020-06-03 00:00:00"
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.nationwide.com/",
+                "title": "Insurance and Financial Services Company – Nationwide",
+                "content": "We protect vehicles, property, pets and events. Personal insurance",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.nationwide.com",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  16
+                ],
+                "score": 0.0625,
+                "category": "general"
+              },
+              {
+                "template": "default.html",
+                "url": "https://doi.sc.gov/957/Understanding-Your-Insurance-Policy",
+                "title": "Understanding Your Insurance Policy | Department of Insurance, SC - Official Website",
+                "content": "An insurance policy is a legal contract between the insurance company (the insurer) and the person(s), business, or entity being insured (the insured). Reading your policy helps you verify that the policy meets your needs and that you understand your and the insurance company’s responsibilities ...",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "doi.sc.gov",
+                  "/957/Understanding-Your-Insurance-Policy",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  17
+                ],
+                "score": 0.058823529411764705,
+                "category": "general"
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.benefits.va.gov/insurance/",
+                "title": "Life Insurance",
+                "content": "Veterans Affairs Life Insurance (VALife) became available January 1, 2023 and offers guaranteed acceptance whole life coverage of up to $40,000 to Veterans with service-connected disabilities.",
+                "publishedDate": "2025-11-07T00:00:00",
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.benefits.va.gov",
+                  "/insurance/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  18
+                ],
+                "score": 0.05555555555555555,
+                "category": "general",
+                "pubdate": "2025-11-07 00:00:00"
+              },
+              {
+                "template": "default.html",
+                "url": "https://ldi.la.gov/",
+                "title": "Louisiana Department of Insurance",
+                "content": "Find out if you are eligible for wind mitigation premium discounts on your homeowners insurance!",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "ldi.la.gov",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  19
+                ],
+                "score": 0.05263157894736842,
+                "category": "general"
+              },
+              {
+                "template": "default.html",
+                "url": "https://www.cigna.com/",
+                "title": "Cigna Healthcare | Health Insurance and Dental Plans",
+                "content": "The requested URL was rejected. Please consult with your administrator. Your support ID is: 5940153416088396387 [Go Back]",
+                "publishedDate": null,
+                "thumbnail": "",
+                "engine": "brave",
+                "parsed_url": [
+                  "https",
+                  "www.cigna.com",
+                  "/",
+                  "",
+                  "",
+                  ""
+                ],
+                "img_src": "",
+                "priority": "",
+                "engines": [
+                  "brave"
+                ],
+                "positions": [
+                  20
+                ],
+                "score": 0.05,
+                "category": "general"
+              }
+            ],
+            "answers": [],
+            "corrections": [],
+            "infoboxes": [
+              {
+                "infobox": "Insurance",
+                "id": "https://en.wikipedia.org/wiki/Insurance",
+                "content": "Insurance is a means of protection from financial loss in which, in exchange for a fee, a party agrees to compensate another party in the event of a certain loss, damage, or injury. It is a form of risk management, primarily used to protect against the risk of a contingent or uncertain loss.",
+                "img_src": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Coast_review_%281910%29_%2814760820941%29.jpg/330px-Coast_review_%281910%29_%2814760820941%29.jpg",
+                "urls": [
+                  {
+                    "title": "Wikipedia",
+                    "url": "https://en.wikipedia.org/wiki/Insurance"
+                  },
+                  {
+                    "title": "Wikidata",
+                    "url": "http://www.wikidata.org/entity/Q43183"
+                  }
+                ],
+                "engine": "wikidata",
+                "url": null,
+                "template": "default.html",
+                "parsed_url": null,
+                "title": "",
+                "thumbnail": "",
+                "priority": "",
+                "engines": [
+                  "wikipedia",
+                  "wikidata"
+                ],
+                "positions": "",
+                "score": 0,
+                "category": "",
+                "publishedDate": null,
+                "attributes": []
+              }
+            ],
+            "suggestions": [
+              "FWD insurance",
+              "Insurance พร บ",
+              "Insurance Premium คือ",
+              "Insurance ตัว ย่อ",
+              "Insurance แปล ว่า",
+              "All Insurance 7 11",
+              "ALL Insurance",
+              "Insurance ประกัน รถยนต์",
+              "Insurance Broker คือ",
+              "Insurance APK",
+              "Insurance travel",
+              "Insurance อ่าน ว่า"
+            ],
+            "unresponsive_engines": [
+              [
+                "startpage",
+                "parsing error"
+              ]
+            ]
+          }
+        }
+      }
+    ],
+    "Input Data": [
+      {
+        "json": {
+          "product": "mouse",
+          "price": "500",
+          "category": "electronics",
+          "status": "pending"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "product": "keyboard",
+          "price": "1200",
+          "category": "electronics",
+          "status": "sold"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "product": "laptop",
+          "price": "35000",
+          "category": "electronics",
+          "status": "sold"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "product": "notebook",
+          "price": "50",
+          "category": "stationery",
+          "status": "sold"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Sold": {
+      "main": [
+        [
+          {
+            "node": "Sort By Price",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields (Change type, Add fields)": {
+      "main": [
+        [
+          {
+            "node": "Filter Sold",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Data": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields (Change type, Add fields)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2e7a2dbd-e401-4a56-9acb-7b1c8084fd5a",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "nrru4JVMjiq44_4S_Hjis",
+  "tags": [
+    {
+      "updatedAt": "2026-02-06T04:09:34.751Z",
+      "createdAt": "2026-02-06T04:09:34.751Z",
+      "id": "wLdl3v8jlLGKpxQz",
+      "name": "Example"
+    },
+    {
+      "updatedAt": "2026-02-06T04:08:50.539Z",
+      "createdAt": "2026-02-06T04:08:50.539Z",
+      "id": "bV84VYB2WRB2bwyr",
+      "name": "Basic"
+    }
+  ]
+}

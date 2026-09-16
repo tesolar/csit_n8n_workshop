@@ -1,0 +1,562 @@
+{
+  "name": "EXM02 - PostgreSQL integration",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        48,
+        16
+      ],
+      "id": "474fe980-0fed-4786-bbde-19f1d340846b",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "person",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1824,
+        16
+      ],
+      "id": "4903c470-2e2b-435e-9193-c19d070d2fe1",
+      "name": "Select rows from a table",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "OIRne7MBoP0lCFbe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- สร้าง Table สำหรับเก็บข้อมูลบุคคล\nCREATE TABLE person (\n    id SERIAL PRIMARY KEY,\n    firstname VARCHAR(100),\n    lastname VARCHAR(100),\n    email VARCHAR(255) UNIQUE,\n    phone VARCHAR(20),\n    birthday DATE,\n    gender VARCHAR(20),\n    website TEXT,\n    image_url TEXT\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        720,
+        96
+      ],
+      "id": "63853c18-c967-4d58-8af3-0ef0b5bcd683",
+      "name": "Execute a SQL query Create Table",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "OIRne7MBoP0lCFbe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS (\n  SELECT * FROM pg_tables \n  WHERE tablename = 'person'\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        272,
+        16
+      ],
+      "id": "eca2393a-6e90-42c7-9e90-3c98e335f1a1",
+      "name": "Execute a SQL query Check table is exists",
+      "credentials": {
+        "postgres": {
+          "id": "OIRne7MBoP0lCFbe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "person",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "firstname",
+              "displayName": "firstname",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lastname",
+              "displayName": "lastname",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "birthday",
+              "displayName": "birthday",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "gender",
+              "displayName": "gender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "image_url",
+              "displayName": "image_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1600,
+        16
+      ],
+      "id": "950ffbda-3741-469c-a0ae-bc22f5f44e85",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "OIRne7MBoP0lCFbe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## __An n8n example flow for PostgreSQL integration__\nAutomatically creates a 'person' table (if it doesn't exist), inserts new person data from Api, and returns the queried results.",
+        "height": 688,
+        "width": 2080,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        -208
+      ],
+      "typeVersion": 1,
+      "id": "a3db8700-24ee-4e1f-bad2-8732fc36ba35",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "44742959-53c3-4f30-a54b-52a0002ab926",
+              "leftValue": "={{ $json.exists }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        16
+      ],
+      "id": "f0232455-2355-40f8-82a0-17fc35f2c395",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "Run this node to drop __person__ table.",
+        "height": 224,
+        "width": 272,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        624,
+        368
+      ],
+      "typeVersion": 1,
+      "id": "7b9408c6-9e79-407d-8a1d-47f420279a66",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "### This n8n workflow showcases a complete database cycle:\n\n    1. Verifies if the 'person' table exists.\n    2. Creates the table dynamically if needed.\n    3. Get person data from API\n    4. Edit person data field to match with 'person' table\n    5. Inserts person information into the database.\n    6. Queries and outputs the stored data as the final result.\"",
+        "height": 192,
+        "width": 512,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        368
+      ],
+      "typeVersion": 1,
+      "id": "03da7fb7-8e63-4e9b-9ebd-008998972e51",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "### Final Result\nThe final result should look like this.\n```json\n[\n  {\n    \"id\": 1,\n    \"firstname\": \"Addie\",\n    \"lastname\": \"Heathcote\",\n    \"email\": \"pouros.carmel@langworth.biz\",\n    \"phone\": \"+14803605624\",\n    \"birthday\": \"2016-01-20T17:00:00.000Z\",\n    \"gender\": \"female\",\n    \"website\": \"http://oconner.com\",\n    \"image_url\": \"http://placeimg.com/640/480/people\"\n  },\n  {\n    \"id\": 2,\n    \"firstname\": \"Suzanne\",\n    \"lastname\": \"Pagac\",\n    \"email\": \"ernser.nannie@hotmail.com\",\n    \"phone\": \"+15519448244\",\n    \"birthday\": \"2011-05-02T17:00:00.000Z\",\n    \"gender\": \"female\",\n    \"website\": \"http://hand.com\",\n    \"image_url\": \"http://placeimg.com/640/480/people\"\n  },\n  {\n    \"id\": 3,\n    \"firstname\": \"Emmett\",\n    \"lastname\": \"Lebsack\",\n    \"email\": \"cole.angeline@ritchie.com\",\n    \"phone\": \"+16785835503\",\n    \"birthday\": \"2010-08-07T17:00:00.000Z\",\n    \"gender\": \"male\",\n    \"website\": \"http://mitchell.net\",\n    \"image_url\": \"http://placeimg.com/640/480/people\"\n  },\n  {\n    \"id\": 4,\n    \"firstname\": \"Carlotta\",\n    \"lastname\": \"Yost\",\n    \"email\": \"hayes.virgil@gmail.com\",\n    \"phone\": \"+13238714208\",\n    \"birthday\": \"2010-01-16T17:00:00.000Z\",\n    \"gender\": \"other\",\n    \"website\": \"http://dubuque.net\",\n    \"image_url\": \"http://placeimg.com/640/480/people\"\n  },\n  {\n    \"id\": 5,\n    \"firstname\": \"Hillary\",\n    \"lastname\": \"Ziemann\",\n    \"email\": \"rolfson.lance@gmail.com\",\n    \"phone\": \"+18305919854\",\n    \"birthday\": \"2005-08-10T17:00:00.000Z\",\n    \"gender\": \"other\",\n    \"website\": \"http://krajcik.org\",\n    \"image_url\": \"http://placeimg.com/640/480/people\"\n  }\n]\n```",
+        "height": 1056,
+        "width": 560
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2048,
+        -208
+      ],
+      "typeVersion": 1,
+      "id": "6c3afb72-cca3-4398-aae9-c6f25f6b3aa9",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "url": "https://fakerapi.it/api/v2/persons",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "_quantity",
+              "value": "5"
+            },
+            {
+              "name": "_birthday_start",
+              "value": "2005-01-01"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        944,
+        16
+      ],
+      "id": "c6a609ae-8245-4b38-9ea2-179dedb8400d",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        16
+      ],
+      "id": "163cafe1-0a18-4314-9ae9-b0a12a43e5f2",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DROP TABLE IF EXISTS person;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        720,
+        432
+      ],
+      "id": "8ae654ef-2a01-49e0-9993-c3e76108bd65",
+      "name": "Drop Person Table",
+      "credentials": {
+        "postgres": {
+          "id": "OIRne7MBoP0lCFbe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "529571f5-2aa7-4853-a7e5-271c8a5d469e",
+              "name": "firstname",
+              "value": "={{ $json.firstname }}",
+              "type": "string"
+            },
+            {
+              "id": "c7484e4e-085c-43a4-80fd-dffb3447e185",
+              "name": "lastname",
+              "value": "={{ $json.lastname }}",
+              "type": "string"
+            },
+            {
+              "id": "d5a1545c-76f6-495f-93d7-53247e6a2288",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "1d03c836-40c6-443e-8f3b-9adfac96d20c",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "c1a644cf-0ac4-4f88-9058-ba9b5a9ddc40",
+              "name": "birthday",
+              "value": "={{ $json.birthday }}",
+              "type": "string"
+            },
+            {
+              "id": "7bfc990d-b481-445f-8a50-083c66574c52",
+              "name": "gender",
+              "value": "={{ $json.gender }}",
+              "type": "string"
+            },
+            {
+              "id": "932266e5-c5dd-4a4f-8ca5-43c3e7ced46b",
+              "name": "website",
+              "value": "={{ $json.website }}",
+              "type": "string"
+            },
+            {
+              "id": "10d9c4b9-eab4-4c2d-8cef-ee99b61af1d9",
+              "name": "image_url",
+              "value": "={{ $json.image }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1376,
+        16
+      ],
+      "id": "0fb5cd38-8be5-4306-b6a5-63479fc8873e",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query Check table is exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query Check table is exists": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query Create Table": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute a SQL query Create Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "cc814a75-e4ed-4b31-b54c-41ee5fb4dc7e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "zOQLMymGQlf4TwVMrUddW",
+  "tags": [
+    {
+      "updatedAt": "2026-02-06T04:09:34.751Z",
+      "createdAt": "2026-02-06T04:09:34.751Z",
+      "id": "wLdl3v8jlLGKpxQz",
+      "name": "Example"
+    }
+  ]
+}

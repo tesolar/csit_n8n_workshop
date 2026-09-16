@@ -1,0 +1,165 @@
+{
+  "name": "EXM10 - Community Nodes",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -208
+      ],
+      "id": "5198089e-b62f-4779-8ee9-d01caa62cdc1",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-tesseractjs.tesseractNode",
+      "typeVersion": 1,
+      "position": [
+        160,
+        -48
+      ],
+      "id": "b9dedc4d-ef85-439a-a838-b9e6f48d6fd1",
+      "name": "Tesseract"
+    },
+    {
+      "parameters": {
+        "value": "={{ $json.text }}",
+        "width": 256,
+        "qrCodeOptions": {}
+      },
+      "type": "n8n-nodes-qrcode.qrCode",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -48
+      ],
+      "id": "a3c92eb2-f9ac-494d-879d-dd8fe8533cb4",
+      "name": "QrCode"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "image-to-qrcode",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -192,
+        128
+      ],
+      "id": "01376d65-3332-4134-98a7-31c838e4556c",
+      "name": "Webhook",
+      "webhookId": "30cb6219-2d74-4af3-a7ea-e948890c1415"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        656,
+        -48
+      ],
+      "id": "e3f2b6dd-a5fb-488c-aa4e-d8ba8271ba2f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "Convert from PDF",
+        "advancedOptions": {}
+      },
+      "type": "n8n-nodes-pdfco.PDFco Api",
+      "typeVersion": 1,
+      "position": [
+        560,
+        192
+      ],
+      "id": "9f77e266-512f-424a-8cb7-740a308d205d",
+      "name": "PDFco Api",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "### © 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+        "height": 156,
+        "width": 1112,
+        "color": 4
+      },
+      "id": "5004dfe0-fe65-4466-9c66-ac000b839781",
+      "name": "Copyright Notice",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        432
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Tesseract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tesseract": {
+      "main": [
+        [
+          {
+            "node": "QrCode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Tesseract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QrCode": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e46d64ef-8dd0-4c97-afa2-9f021fa77cb9",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "gjJjc-Y8drBH2mMVIIn7a",
+  "tags": []
+}

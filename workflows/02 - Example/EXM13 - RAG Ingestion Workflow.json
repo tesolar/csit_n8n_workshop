@@ -1,0 +1,892 @@
+{
+  "name": "EXM13 - RAG Ingestion Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ingest",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        784,
+        288
+      ],
+      "id": "e13ab60f-6891-4205-a663-25b2d6bf0336",
+      "name": "Webhook Trigger",
+      "webhookId": "rag-ingest-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "/*\n * Candid GRC Co., Ltd.\n * Copyright © 2026 Candid GRC Co., Ltd.\n * All Rights Reserved.\n *\n * This source code is proprietary and confidential.\n * Unauthorized copying, modification, redistribution,\n * reverse engineering, or commercial use is strictly prohibited.\n *\n * This code forms part of the Candid GRC Automation Framework.\n */\n\nconst url = $json.body.url;\nconst isPDF =\n  url.toLowerCase().endsWith(\".pdf\") ||\n  url.toLowerCase().includes(\".pdf?\") ||\n  url.toLowerCase().includes(\".pdf#\");\nreturn [{ json: { url, isPDF } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        192
+      ],
+      "id": "adb9b29a-39b3-4691-9b0a-467f5a9854e1",
+      "name": "Detect Content Type"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "69252de4-dcbe-42ef-b37f-73450b8a4841",
+              "leftValue": "={{ $json.isPDF }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        192
+      ],
+      "id": "b686c0d2-3194-4172-b5ff-f4b08d567655",
+      "name": "Is PDF?"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1456,
+        96
+      ],
+      "id": "78393b75-c8c8-4e21-b025-942953236998",
+      "name": "Fetch PDF"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://unstructured-api:8000/general/v0/general",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "strategy",
+              "value": "auto"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        96
+      ],
+      "id": "7bd06b78-2aa0-4515-b061-c21667580636",
+      "name": "Parse PDF (Unstructured)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://browserless:3000/content",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ url: $json.url, gotoOptions: { waitUntil: 'networkidle2', timeout: 60000 } }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        288
+      ],
+      "id": "2f46b09d-b0d6-4445-a816-c1c73d2c991c",
+      "name": "Fetch HTML (Browserless)"
+    },
+    {
+      "parameters": {
+        "jsCode": "/*\n * Candid GRC Co., Ltd.\n * Copyright © 2026 Candid GRC Co., Ltd.\n * All Rights Reserved.\n *\n * This source code is proprietary and confidential.\n * Unauthorized copying, modification, redistribution,\n * reverse engineering, or commercial use is strictly prohibited.\n *\n * This code forms part of the Candid GRC Automation Framework.\n */\n\n// Extract text from Browserless /content response (already plain text)\nlet fullText = \"\";\nconst data = items[0].json;\n\nif (typeof data === \"string\") {\n  fullText = data;\n} else if (data.data) {\n  fullText = data.data;\n} else {\n  fullText = JSON.stringify(data);\n}\n\n// Clean up HTML tags if any remain\nfullText = fullText\n  .replace(/<[^>]*>/g, \" \")\n  .replace(/\\s+/g, \" \")\n  .trim();\n\nconst url = $(\"Detect Content Type\").item.json.url;\nreturn [{ json: { fullText, url } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1904,
+        288
+      ],
+      "id": "f2ae4ced-7ef1-4300-bd2d-7dc7d1a42bfc",
+      "name": "Extract HTML Text"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2128,
+        192
+      ],
+      "id": "22845dc2-f3c9-4b38-ae7b-9d12d971436f",
+      "name": "Merge Paths"
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "url": "={{ $json.url }}",
+            "status": "processing",
+            "updated_at": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "url"
+          ],
+          "schema": [
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2352,
+        192
+      ],
+      "id": "75f19794-339a-4e9f-9ef1-3729341d022a",
+      "name": "Create Document Record",
+      "credentials": {
+        "postgres": {
+          "id": "OIRne7MBoP0lCFbe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/*\n * Candid GRC Co., Ltd.\n * Copyright © 2026 Candid GRC Co., Ltd.\n * All Rights Reserved.\n *\n * This source code is proprietary and confidential.\n * Unauthorized copying, modification, redistribution,\n * reverse engineering, or commercial use is strictly prohibited.\n *\n * This code forms part of the Candid GRC Automation Framework.\n */\n\n// Split text into ~1000 character chunks with overlap\nconst fullText = $(\"Merge Paths\").first().json.fullText;\n// Use items[0].json.id because input comes from Postgres node which returns an array\nconst documentId = items[0] ? items[0].json.id : 0;\n\nif (!fullText || fullText.length === 0) {\n  throw new Error(\n    \"No text content available to chunk. Please check the Extraction steps.\",\n  );\n}\n\nconst CHUNK_SIZE = 1000;\nconst OVERLAP = 100;\nconst chunks = [];\n\nfor (let i = 0; i < fullText.length; i += CHUNK_SIZE - OVERLAP) {\n  const chunk = fullText.substring(i, i + CHUNK_SIZE).trim();\n  if (chunk.length > 50) {\n    chunks.push({\n      json: {\n        content: chunk,\n        chunk_index: chunks.length,\n        document_id: documentId,\n      },\n    });\n  }\n}\n\nreturn chunks;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2576,
+        96
+      ],
+      "id": "3d8edc0f-3281-4982-b038-ec2cbf1d80de",
+      "name": "Split into Chunks"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=AIzaSyCVSYVQP9fXK8Wp_JMrvIFUwQLj949hGYI",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'models/gemini-embedding-001', content: { parts: [{ text: $json.content }] }, outputDimensionality: 768 }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 768
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2800,
+        96
+      ],
+      "id": "c2adeadc-8826-49fc-9980-381c2032e471",
+      "name": "Generate Chunk Embeddings"
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "document_chunks",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "document_id": "={{ $('Split into Chunks').item.json.document_id }}",
+            "content": "={{ $('Split into Chunks').item.json.content }}",
+            "embedding": "={{ JSON.stringify($json.embedding.values) }}",
+            "chunk_index": "={{ $('Split into Chunks').item.json.chunk_index }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "document_id",
+              "displayName": "document_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "embedding",
+              "displayName": "embedding",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "chunk_index",
+              "displayName": "chunk_index",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3024,
+        96
+      ],
+      "id": "d670a788-28c1-4fdc-9ebc-c9a2ff2954a7",
+      "name": "Store Chunks in Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "OIRne7MBoP0lCFbe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=AIzaSyCVSYVQP9fXK8Wp_JMrvIFUwQLj949hGYI",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents: [{ parts: [{ text: 'คุณเป็นผู้เชี่ยวชาญด้านการสรุปเนื้อหา กรุณาสรุปเอกสารต่อไปนี้เป็นภาษาไทยอย่างครอบคลุม ครบถ้วน และเข้าใจง่าย:\\n\\n' + $('Merge Paths').item.json.fullText.substring(0, 30000) }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 2048 } }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2576,
+        288
+      ],
+      "id": "a9bf8faf-2ed9-4c8f-97bf-b16567d2d7a9",
+      "name": "Generate Thai Summary (HTTP)"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Create Document Record').item.json.id }}",
+            "summary": "={{ $json.candidates[0].content.parts[0].text }}",
+            "status": "processed",
+            "updated_at": "={{ $now }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2800,
+        288
+      ],
+      "id": "14b5b4e7-aac3-4e09-9bf9-fade8e42b9fc",
+      "name": "Save Summary to Documents",
+      "credentials": {
+        "postgres": {
+          "id": "OIRne7MBoP0lCFbe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, message: 'Document ingested successfully', url: $('Detect Content Type').first().json.url } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3024,
+        288
+      ],
+      "id": "f4db02ba-e1fa-4bd1-957b-88588dad4d9d",
+      "name": "Respond Success"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- =============================================================\n-- RAG System Database Initialization\n-- PostgreSQL + pgvector (Dimension: 768 for Gemini embedding-001)\n-- =============================================================\n\n-- 1. Enable the pgvector extension\nCREATE EXTENSION IF NOT EXISTS vector;\n\n-- 2. Documents table — stores metadata about each ingested source\nCREATE TABLE IF NOT EXISTS documents (\n    id          SERIAL PRIMARY KEY,\n    url         TEXT NOT NULL UNIQUE,\n    summary     TEXT,\n    status      TEXT DEFAULT 'pending',\n    created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,\n    updated_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP\n);\n\n-- 3. Document chunks table — stores text chunks with vector embeddings\nCREATE TABLE IF NOT EXISTS document_chunks (\n    id            SERIAL PRIMARY KEY,\n    document_id   INTEGER NOT NULL REFERENCES documents(id) ON DELETE CASCADE,\n    content       TEXT NOT NULL,\n    embedding     vector(768),\n    chunk_index   INTEGER,\n    created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP\n);\n\n-- 4. HNSW index for fast cosine-similarity search\nCREATE INDEX IF NOT EXISTS idx_document_chunks_embedding_hnsw\n   ON document_chunks\n   USING hnsw (embedding vector_cosine_ops);\n\n-- 5. Index on document_id for fast joins\nCREATE INDEX IF NOT EXISTS idx_document_chunks_document_id\n    ON document_chunks (document_id);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        768,
+        720
+      ],
+      "id": "c58f936d-2796-4ae8-a3dc-ddbab37990c7",
+      "name": "Create Table",
+      "credentials": {
+        "postgres": {
+          "id": "OIRne7MBoP0lCFbe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        784,
+        96
+      ],
+      "id": "da6bf3f6-da88-4d04-922b-584da7e0df44",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "content": "### © 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+        "height": 156,
+        "width": 1112,
+        "color": 4
+      },
+      "id": "97baa214-45ac-4373-8761-db03f4c9e6a3",
+      "name": "Copyright Notice",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -336
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 0: เตรียมโครงสร้างฐานข้อมูล (One-time Setup)\n\n- โหนดนี้ใช้สร้างตาราง `documents` และ `document_chunks` พร้อม pgvector\n- ใช้ตอนเริ่มโปรเจกต์หรือ reset environment\n- ถ้าตารางมีอยู่แล้ว `CREATE TABLE IF NOT EXISTS` จะไม่แก้ type เดิม",
+        "height": 396,
+        "width": 408,
+        "color": 5
+      },
+      "id": "1f527b79-43b3-4bf1-b915-0cbfa6084e1b",
+      "name": "Note - DB Setup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        624,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 1: รับ Request และแยกประเภทคอนเทนต์\n\n- เริ่มจาก Webhook รับ `body.url`\n- `Detect Content Type` ตรวจว่าเป็น PDF หรือ HTML\n- `Is PDF?` ทำ routing เพื่อเลือก pipeline ที่เหมาะกับข้อมูล",
+        "height": 182,
+        "width": 440,
+        "color": 3
+      },
+      "id": "9fc4d9c6-49aa-47a2-931f-0dee4830a0a0",
+      "name": "Note - Trigger and Routing",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 2A: PDF Extraction Path\n\n- `Fetch PDF` ดาวน์โหลดไฟล์เป็น binary\n- `Parse PDF (Unstructured)` แปลงไฟล์เป็นองค์ประกอบข้อความ\n- `Extract PDF Text` รวมข้อความเป็น `fullText` สำหรับขั้นตอนถัดไป",
+        "height": 188,
+        "width": 580,
+        "color": 6
+      },
+      "id": "b3763fc6-4955-486e-af0d-891e4fe7bbde",
+      "name": "Note - PDF Path",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 2B: HTML Extraction Path\n\n- `Fetch HTML (Browserless)` render หน้าเว็บแล้วดึง content\n- `Extract HTML Text` ทำความสะอาด text (ลบ tag/ช่องว่างเกิน)\n- ส่งออกเป็น `fullText` รูปแบบเดียวกับ PDF path",
+        "height": 188,
+        "width": 468,
+        "color": 6
+      },
+      "id": "b0784304-c181-4b69-9702-9bd188eaf0b9",
+      "name": "Note - HTML Path",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 3: Merge + ลงทะเบียนเอกสาร\n\n- `Merge Paths` รวมผลจาก PDF/HTML ให้เหลือทางเดียว\n- `Create Document Record` upsert เอกสารในตาราง `documents`\n- ได้ `document_id` เพื่อใช้เป็น foreign key สำหรับ chunks",
+        "height": 198,
+        "width": 430,
+        "color": 3
+      },
+      "id": "c9215ef9-5b56-4b03-86e1-d9163621ae5b",
+      "name": "Note - Merge and Document",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 4: Text Chunking\n\n- `Split into Chunks` ตัดข้อความเป็นช่วงขนาด ~1000 ตัวอักษร\n- ใช้ overlap 100 เพื่อคงบริบทข้ามช่วง\n- แต่ละ chunk มี `chunk_index` และ `document_id` ชัดเจน",
+        "height": 192,
+        "width": 404,
+        "color": 7
+      },
+      "id": "e258cddf-3633-4a04-861b-3bb69398eb8b",
+      "name": "Note - Chunking",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 5: Embedding + Vector Storage\n\n- `Generate Chunk Embeddings` เรียก Gemini embedding\n- บังคับ `outputDimensionality: 768` ให้ตรง schema\n- `Store Chunks in Postgres` บันทึก vector ด้วย `::vector(768)`",
+        "height": 188,
+        "width": 468,
+        "color": 5
+      },
+      "id": "a35099a1-dbf0-4bdb-8590-6426be8e91f6",
+      "name": "Note - Embedding Storage",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3024,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Step 6: Thai Summary + Final Response\n\n- `Generate Thai Summary (HTTP)` สรุปใจความสำคัญเป็นภาษาไทย\n- `Save Summary to Documents` อัปเดต status เป็น `processed`\n- `Respond Success` ส่งผลลัพธ์กลับ caller",
+        "height": 182,
+        "width": 472,
+        "color": 3
+      },
+      "id": "591b6807-5591-4710-9e02-ce5bb4eb2dc8",
+      "name": "Note - Summary and Response",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2528,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### ML-style Checklist (สำคัญมาก)\n\n1. มิติ embedding ต้องตรงกันทุกจุด: API output, SQL cast, DB schema\n2. ถ้าเปลี่ยนมิติ ต้อง migrate column ไม่ใช่แค่แก้ workflow\n3. ทดสอบทั้งเส้น PDF และ HTML ก่อนเปิดใช้งานจริง",
+        "height": 188,
+        "width": 520,
+        "color": 4
+      },
+      "id": "e627b39a-3ddc-4783-ab4b-9f63ff8edff7",
+      "name": "Note - Quality Checklist",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3072,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/*\n * Candid GRC Co., Ltd.\n * Copyright © 2026 Candid GRC Co., Ltd.\n * All Rights Reserved.\n *\n * This source code is proprietary and confidential.\n * Unauthorized copying, modification, redistribution,\n * reverse engineering, or commercial use is strictly prohibited.\n *\n * This code forms part of the Candid GRC Automation Framework.\n */\n\n// Read all incoming items from Parse PDF (Unstructured).\nconst inputItems = $input.all();\nconst textChunks = [];\n\nfor (const item of inputItems) {\n  const payload = item.json || {};\n\n  // Most common Unstructured shape after n8n item-splitting: { text: \"...\" }\n  if (typeof payload.text === \"string\" && payload.text.trim()) {\n    textChunks.push(payload.text.trim());\n    continue;\n  }\n\n  // Some setups return nested arrays/objects.\n  if (Array.isArray(payload.elements)) {\n    for (const el of payload.elements) {\n      if (typeof el?.text === \"string\" && el.text.trim()) {\n        textChunks.push(el.text.trim());\n      }\n    }\n    continue;\n  }\n\n  if (Array.isArray(payload.data)) {\n    for (const el of payload.data) {\n      if (typeof el?.text === \"string\" && el.text.trim()) {\n        textChunks.push(el.text.trim());\n      }\n    }\n  }\n}\n\nconst fullText = textChunks.join(\"\\n\").trim();\n\n// Keep URL only if it is present in the incoming items.\nconst urlItem = inputItems.find((i) => typeof i.json?.url === \"string\" && i.json.url);\nconst url = urlItem ? urlItem.json.url : null;\n\nreturn [{\n  json: {\n    fullText,\n    url,\n  },\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1904,
+        96
+      ],
+      "id": "ecb206a1-ec4f-4edf-9426-e1d185e3d5ad",
+      "name": "Extract PDF Text"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "body": {
+            "url": "https://arize.com/wp-content/uploads/2024/09/LLM-Guardrails-101.pdf"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Detect Content Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Content Type": {
+      "main": [
+        [
+          {
+            "node": "Is PDF?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is PDF?": {
+      "main": [
+        [
+          {
+            "node": "Fetch PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch HTML (Browserless)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch PDF": {
+      "main": [
+        [
+          {
+            "node": "Parse PDF (Unstructured)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse PDF (Unstructured)": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch HTML (Browserless)": {
+      "main": [
+        [
+          {
+            "node": "Extract HTML Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract HTML Text": {
+      "main": [
+        [
+          {
+            "node": "Merge Paths",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Paths": {
+      "main": [
+        [
+          {
+            "node": "Create Document Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Document Record": {
+      "main": [
+        [
+          {
+            "node": "Split into Chunks",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate Thai Summary (HTTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split into Chunks": {
+      "main": [
+        [
+          {
+            "node": "Generate Chunk Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Chunk Embeddings": {
+      "main": [
+        [
+          {
+            "node": "Store Chunks in Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Thai Summary (HTTP)": {
+      "main": [
+        [
+          {
+            "node": "Save Summary to Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Summary to Documents": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Detect Content Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Text": {
+      "main": [
+        [
+          {
+            "node": "Merge Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c03919ac-230b-49dd-856b-8f3b5a9e7b02",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "1rxL7XWLR36DjtRwzwV53",
+  "tags": []
+}

@@ -1,0 +1,520 @@
+{
+  "name": "EXM20.2 - Vibe Code Format OCR Output",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        0
+      ],
+      "id": "cfea05a9-3b1d-4dff-8d76-11879083d6d4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://drive.usercontent.google.com/download?id=1toUP8VqsKgGgfmy1EjXx6j8-esxtjHEa&export=download&authuser=0&confirm=t&uuid=e985e4a3-8b77-427c-a7e0-69baeca94da6&at=ALBwUgkyp_tk8kGl29hLg5WgnE1T:1777954498841",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        64,
+        0
+      ],
+      "id": "2715adc5-a32a-40d7-afb3-f6d95a126e8a",
+      "name": "Get file"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.opentyphoon.ai/v1/ocr",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "typhoon-ocr"
+            },
+            {
+              "name": "task_type",
+              "value": "default"
+            },
+            {
+              "name": "max_tokens",
+              "value": "16384"
+            },
+            {
+              "name": "temperature",
+              "value": "0.1"
+            },
+            {
+              "name": "top_p",
+              "value": "0.6"
+            },
+            {
+              "name": "repetition_penalty",
+              "value": "1.2"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "={{ $('Get file').first().binary.data }}"
+            },
+            {
+              "name": "pages",
+              "value": "={{ JSON.stringify(Array.from({ length: $json.numpages }, (_, i) => i + 1)) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        560,
+        0
+      ],
+      "id": "64a1f812-384c-487c-a2a0-91bee71b42c8",
+      "name": "Typhoon-OCR API",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "FwkJo02WG7AMs4JE",
+          "name": "Typhoon OCR [DC]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        0
+      ],
+      "id": "890cd152-9064-4ead-866f-c261788ac0ba",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ดึงข้อมูลจากผลลัพธ์ของ Typhoon OCR\nconst allResults = items[0].json.results;\nlet finalData = [];\n\n// ฟังก์ชันสำหรับล้าง Tag HTML และคั่นด้วยสัญลักษณ์พิเศษเพื่อแยก Column\nfunction cleanHtml(html) {\n  return html\n    .replace(/<\\/tr>/g, '---ROW---') // มาร์คจุดจบแถว\n    .replace(/<\\/td>/g, '---COL---') // มาร์คจุดจบหลัก\n    .replace(/<[^>]*>/g, '')         // ลบ Tag HTML ทั้งหมด\n    .trim();\n}\n\nallResults.forEach(page => {\n  const htmlContent = page.message.choices[0].message.content;\n  const cleanedText = cleanHtml(htmlContent);\n  \n  // แยกข้อมูลเป็นแถว\n  const rows = cleanedText.split('---ROW---');\n\n  rows.forEach(row => {\n    const cols = row.split('---COL---').map(c => c.trim()).filter(c => c !== \"\");\n\n    // ตรวจสอบว่าเป็นแถวข้อมูลจังหวัด (ปกติจะมี 10 คอลัมน์ตามหัวข้อ)\n    // และกรองแถวที่เป็นหัวตารางหรือแถวสรุปยอดออก\n    if (cols.length === 10 && !isNaN(cols[0])) {\n      finalData.push({\n        id: parseInt(cols[0]),\n        province: cols[1],\n        new_policies_count: parseInt(cols[2].replace(/,/g, '')),\n        new_policies_amount: parseFloat(cols[3].replace(/,/g, '')),\n        decreased_policies_count: parseInt(cols[4].replace(/,/g, '')),\n        decreased_policies_amount: parseFloat(cols[5].replace(/,/g, '')),\n        active_policies_count: parseInt(cols[6].replace(/,/g, '')),\n        active_policies_amount: parseFloat(cols[7].replace(/,/g, '')),\n        total_premium: parseFloat(cols[8].replace(/,/g, '')),\n        benefit_paid: parseFloat(cols[9].replace(/,/g, ''))\n      });\n    }\n  });\n});\n\n// ส่งออกข้อมูลในรูปแบบที่ n8n เข้าใจ (Array of Items)\nreturn finalData.map(data => ({ json: data }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        0
+      ],
+      "id": "aa6c939e-f5f7-4920-bae9-655ac8f915e9",
+      "name": "Format OCR Output"
+    },
+    {
+      "parameters": {
+        "content": "## หลักการของ Vibe Coding:\n- บอก AI ว่าอยากได้อะไร \n- AI เขียนโค้ดให้\n- ถ้ามี error ก็ paste error ให้ AI แก้ต่อ\n- ไม่จำเป็นต้องเข้าใจโค้ดทุกบรรทัด\n\n\n**ข้อดี:**\n- สร้างโปรแกรมได้เร็วมาก\n- คนที่ไม่ได้เป็น developer ก็ทำได้\n- เหมาะกับ prototype หรือ side project\n\n**ข้อเสีย:**\n- โค้ดที่ได้อาจมีบั๊กซ่อนอยู่\n- ถ้าไม่เข้าใจโค้ด จะแก้ปัญหาลึก ๆ ได้ยาก\n- ไม่เหมาะกับระบบที่ต้องการความปลอดภัยสูง\n",
+        "height": 368,
+        "width": 336,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1392,
+        656
+      ],
+      "typeVersion": 1,
+      "id": "51ee2a1d-cfd7-4ee4-9fbb-e6be8be29307",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## ตัวอย่าง Prompt ที่ใช้ในการ vibe code สำหรับ Code node\n---\n\nช่วยเขียน Code javascript สำหรับใช้ใน n8n Code Node แปลงผลลัพท์ OCR นี้เป็น JSON ที่สามารถนำไปบันทึก DB ได้ใน node ถัดไป\nโดยใช้ Schema ดังนี้:\n- `province`: (string) ชื่อจังหวัด\n- `new_policies_count`: (number) จำนวนกรมธรรม์ใหม่\n- `new_policies_amount`: (number) จำนวนเงินเอาประกันใหม่\n- `decreased_policies_count`: (number) จำนวนกรมธรรม์ลดลง\n- `decreased_policies_amount`: (number) จำนวนเงินเอาประกันลดลง\n- `active_policies_count`: (number) จำนวนกรมธรรม์มีผลบังคับ\n- `active_policies_amount`: (number) จำนวนเงินเอาประกันมีผลบังคับ\n- `total_premium`: (number) เบี้ยประกันภัยรับทั้งสิ้น\n- `benefit_paid`: (number) เงินที่จ่ายตามกรมธรรม์\n\n[วาง OCR output ที่เป็นผลลัพธ์จาก node Typhoon-OCR API]\n",
+        "height": 688,
+        "width": 464,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        800,
+        -528
+      ],
+      "typeVersion": 1,
+      "id": "1dccf826-e200-4a9b-84f0-e68f83c8b2d4",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## 📝 ตัวอย่าง Prompt สำหรับส่งให้ AI ในกรณีที่ต้องการความแม่นยำมากขึ้นใน Prompt เดียว\n\n**Context:**\nฉันใช้ n8n Code Node ภาษา JavaScript เพื่อประมวลผลข้อมูลจาก OCR\n\n**Input Data:**\nนี่คือ JSON output จริงที่ได้รับจาก OCR node (มีข้อมูลกระจายหลายหน้าในอาเรย์ `results`):\n[วาง OCR output ที่เป็นผลลัพธ์จาก node Typhoon-OCR API]\n\n\n**Output Schema ที่ต้องการ:**\nช่วยเขียน Code เพื่อ Extract ข้อมูลจาก HTML Table ใน `content` ออกมาเป็น Flat JSON Array โดยใช้ Schema ดังนี้:\n- `province`: (string) ชื่อจังหวัด\n- `new_policies_count`: (number) จำนวนกรมธรรม์ใหม่\n- `new_policies_amount`: (number) จำนวนเงินเอาประกันใหม่\n- `decreased_policies_count`: (number) จำนวนกรมธรรม์ลดลง\n- `decreased_policies_amount`: (number) จำนวนเงินเอาประกันลดลง\n- `active_policies_count`: (number) จำนวนกรมธรรม์มีผลบังคับ\n- `active_policies_amount`: (number) จำนวนเงินเอาประกันมีผลบังคับ\n- `total_premium`: (number) เบี้ยประกันภัยรับทั้งสิ้น\n- `benefit_paid`: (number) เงินที่จ่ายตามกรมธรรม์\n\n**Edge Case & Constraints:**\n1. **Data Cleaning:** ตัวเลขใน HTML มีเครื่องหมาย comma (`,`) และบางจุดอาจเป็นเครื่องหมายลบ (`-`) หรือค่าว่าง ให้แปลงเป็นตัวเลข (Number) ที่นำไปคำนวณต่อได้เสมอ (ถ้าว่างให้เป็น 0)\n2. **Row Filtering:** ข้ามแถวที่เป็น Header ของตาราง และแถวที่เป็นชื่อภาค (เช่น \"ภาคกลาง\")\n3. **Multi-page Merge:** รวมข้อมูลจากทุกหน้าในอาเรย์ `results` เข้าด้วยกัน\n\n**Next Node Destination:**\nOutput นี้จะถูกส่งต่อไปบันทึกลง **PostgreSQL Database** ดังนั้นขอให้คืนค่าออกมาเป็นอาเรย์ของอ็อบเจกต์ `[ { json: { ... } } ]`\n\n**Instructions:**\n- ตอบเป็น JavaScript Code สำหรับ n8n เท่านั้น\n- ใส่ Comment อธิบาย Logic สำคัญสั้นๆ\n- ไม่ต้องอธิบายทฤษฎีประกอบ เอาแต่ Code มาเลย\n",
+        "height": 832,
+        "width": 672,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        704,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "67af9147-c8fc-4b53-8c0f-5551974dca9f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# What happened to the workflow?\n### สี่งที่ต้องการ\n- ต้องการนำข้อมูลที่ได้จากการทำ OCR จากไฟล์ PDF ไปบันทึกลงใน Database \n### ปัญหาที่พบ\n- ข้อมูลที่ได้จากการทำ OCR ไม่สามารถอยู่ในรูปแบบที่จะนำใช้งานต่อได้\n### วิธีที่ใช้แก้\n-  ใช้ code node ทำการ format ผลลัพธ์ OCR โดยให้ AI เช่น Gemini, ChatGPT เขียน code จัด format ให้ สำหรับใช้ใน code node",
+        "height": 272,
+        "width": 592,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        -384
+      ],
+      "typeVersion": 1,
+      "id": "27c15a7d-6b1a-4615-9d2a-089cc7677a16",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "dxH9DuNDA4yB6JAL",
+          "mode": "list",
+          "cachedResultName": "life_insurance_reports",
+          "cachedResultUrl": "/projects/ViLj2OhWPm2Oq87T/datatables/dxH9DuNDA4yB6JAL"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "province",
+              "displayName": "province",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "new_policies_count",
+              "displayName": "new_policies_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "new_policies_amount",
+              "displayName": "new_policies_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "decreased_policies_count",
+              "displayName": "decreased_policies_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "decreased_policies_amount",
+              "displayName": "decreased_policies_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "active_policies_count",
+              "displayName": "active_policies_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "active_policies_amount",
+              "displayName": "active_policies_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "total_premium",
+              "displayName": "total_premium",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "benefit_paid",
+              "displayName": "benefit_paid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        0
+      ],
+      "id": "41a72e12-ca64-4888-a838-04e182ba69d7",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "life_insurance_reports",
+        "columns": {
+          "column": [
+            {
+              "name": "province"
+            },
+            {
+              "name": "new_policies_count",
+              "type": "number"
+            },
+            {
+              "name": "new_policies_amount",
+              "type": "number"
+            },
+            {
+              "name": "decreased_policies_count",
+              "type": "number"
+            },
+            {
+              "name": "decreased_policies_amount",
+              "type": "number"
+            },
+            {
+              "name": "active_policies_count",
+              "type": "number"
+            },
+            {
+              "name": "active_policies_amount",
+              "type": "number"
+            },
+            {
+              "name": "total_premium",
+              "type": "number"
+            },
+            {
+              "name": "benefit_paid",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        160
+      ],
+      "id": "bc4b09d4-66f3-4f7f-891f-3b71822c21d2",
+      "name": "Create a data table"
+    },
+    {
+      "parameters": {
+        "content": "### © 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+        "height": 156,
+        "width": 1112,
+        "color": 4
+      },
+      "id": "5cea61a8-4498-4ed2-8c66-dab0a15893df",
+      "name": "Copyright Notice",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### ทำการ OCR ด้วย Typhoon-OCR API",
+        "height": 240,
+        "width": 384,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        320,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "49213b39-00ab-4e93-9869-2da0b6ee074d",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "### ดึง File Pdf ที่จะใช้",
+        "height": 256,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -16,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "e73a8199-a98b-4d50-8a60-35e51a1d21d9",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "### insert ข้อมูลที่ format แล้วลงฐานข้อมูล",
+        "height": 368,
+        "width": 320,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1408,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "9934b73d-986d-42b0-b4ea-4b3a77af135d",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "### Format ข้อมูล เพื่อใช้ใน Database",
+        "height": 208,
+        "width": 288,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        880,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "ecf90726-e52e-42a3-91a1-37509caf88df",
+      "name": "Sticky Note7"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Typhoon-OCR API": {
+      "main": [
+        [
+          {
+            "node": "Format OCR Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Typhoon-OCR API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format OCR Output": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "df11c92c-4faa-46a0-b0a0-0e74b97c56d3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "jjnvBz8JVBL4x9W1uGyZ4",
+  "tags": [
+    {
+      "updatedAt": "2026-02-06T04:09:34.751Z",
+      "createdAt": "2026-02-06T04:09:34.751Z",
+      "id": "wLdl3v8jlLGKpxQz",
+      "name": "Example"
+    }
+  ]
+}

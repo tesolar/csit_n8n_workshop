@@ -1,0 +1,471 @@
+{
+  "name": "EXM03 - n8n + Google drive + Google sheet",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        208,
+        768
+      ],
+      "id": "39084883-7f69-465e-9966-1c308283b102",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        656,
+        560
+      ],
+      "id": "2f791b4c-2dc0-40ab-85a9-2d9c0849f45a",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "579743c7-1442-4596-bcaf-dd6a925a3728",
+              "name": "firstName",
+              "value": "={{ $json.name.first }}",
+              "type": "string"
+            },
+            {
+              "id": "3eda7368-23a5-451d-825a-a754c9218783",
+              "name": "lastName",
+              "value": "={{ $json.name.last }}",
+              "type": "string"
+            },
+            {
+              "id": "4e01f99b-3bea-4313-afd2-435afeef9081",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "ae8bd0d9-d488-4271-aca4-14b314b59956",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        560
+      ],
+      "id": "4c0db7d6-c41d-4838-8ee5-fac46488ffbf",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "https://randomuser.me/api/?results=5",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        432,
+        560
+      ],
+      "id": "dae95abe-7911-4842-9bf6-c4a9442cbba7",
+      "name": "Get 5 Random Users"
+    },
+    {
+      "parameters": {
+        "content": "### 🏗️ Workflow: Smart Random User Sync (Google Sheets)\nThis workflow fetches random user data and intelligently syncs it to a Google Sheet, creating the file automatically if it doesn't already exist.\n\n---\n#### 1. File Check & Initialization\n* **Search files and folders:** Checks Google Drive for an existing spreadsheet named `users-contact`.\n* **If (Logic):** * **TRUE:** If the file exists, it extracts the `Spread Sheet ID`.\n    * **FALSE:** If the file is not found, it triggers the **Create spreadsheet** node to generate a new one.\n\n#### 2. Data Acquisition & Cleaning\n* **Get 5 Random Users:** Pulls 5 new profiles from the `randomuser.me` API.\n* **Split Out:** Flattens the API results into individual user items.\n* **Edit Fields:** Maps raw JSON data into clean columns: `firstName`, `lastName`, `email`, and `phone`.\n\n#### 3. Data Integration\n* **Merge:** Synchronizes the data stream from the \"Edit Fields\" node with the \"Spread Sheet ID\" identified in Step 1.\n* **Append row in sheet:** Inserts the 5 new user records into the correct Google Sheet dynamically.\n\n---\n**Key Feature:** Prevents errors by ensuring a destination file exists before attempting to write data.",
+        "height": 480,
+        "width": 960,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "30794e9b-860a-4798-bed0-6bab44638912",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "users-contact",
+        "sheetsUi": {
+          "sheetValues": [
+            {
+              "title": "users"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        880,
+        960
+      ],
+      "id": "605abd95-7e9d-4046-a796-c69b72eaf93c",
+      "name": "Create spreadsheet"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f054f209-3d36-4acc-9f1e-fe81d5840c6e",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        656,
+        800
+      ],
+      "id": "9ae8be79-c8f7-4873-b09d-cbf8638b6a9c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1104,
+        656
+      ],
+      "id": "8125b0fa-1e92-4fe3-91c5-22dde55bff5f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $node['Spread Sheet ID'].json.id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "users",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "firstName",
+              "displayName": "firstName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lastName",
+              "displayName": "lastName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1328,
+        656
+      ],
+      "id": "29bc30b6-e754-4930-aecc-1984ff166d55",
+      "name": "Append row in sheet"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e658a559-3473-4084-8976-36e614a9a4c9",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        752
+      ],
+      "id": "9e13ccfd-47fe-4b85-830a-35d38c82e4c1",
+      "name": "Spread Sheet ID"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "users-contact",
+        "filter": {
+          "whatToSearch": "files",
+          "fileTypes": [
+            "application/vnd.google-apps.spreadsheet"
+          ]
+        },
+        "options": {
+          "fields": [
+            "webViewLink",
+            "id",
+            "name"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        432,
+        864
+      ],
+      "id": "d5626d22-8688-4911-ad9a-63339e9ed60c",
+      "name": "Search files and folders",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "users-contact",
+        "filter": {
+          "whatToSearch": "files",
+          "fileTypes": [
+            "application/vnd.google-apps.spreadsheet"
+          ]
+        },
+        "options": {
+          "fields": [
+            "webViewLink"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1568,
+        656
+      ],
+      "id": "b56b15d9-4d5b-4d9a-ae44-33b5bd031ff5",
+      "name": "Get link of saved user data",
+      "alwaysOutputData": false,
+      "executeOnce": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get 5 Random Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get 5 Random Users": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Spread Sheet ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get link of saved user data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spread Sheet ID": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "17b239ab-b766-4253-8bef-0919b3aecd49",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "1OJcYJ8BCJbTMye0CZ047",
+  "tags": [
+    {
+      "updatedAt": "2026-02-06T04:09:34.751Z",
+      "createdAt": "2026-02-06T04:09:34.751Z",
+      "id": "wLdl3v8jlLGKpxQz",
+      "name": "Example"
+    },
+    {
+      "updatedAt": "2026-02-06T04:08:50.539Z",
+      "createdAt": "2026-02-06T04:08:50.539Z",
+      "id": "bV84VYB2WRB2bwyr",
+      "name": "Basic"
+    }
+  ]
+}

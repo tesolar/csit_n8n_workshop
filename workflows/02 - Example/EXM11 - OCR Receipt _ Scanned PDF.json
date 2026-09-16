@@ -1,0 +1,335 @@
+{
+  "name": "EXM11 - OCR Receipt / Scanned PDF",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## OCR ใบเสร็จ / PDF สแกน\n\n**Flow:**\n1. Webhook รับไฟล์ (รูป/PDF) โดยตรง\n2. Unstructured API ทำ OCR\n3. AI จัด structure ข้อมูล (ร้านค้า, วันที่, รายการ, ยอดรวม)\n\n**รับไฟล์:** multipart/form-data field ชื่อ `file`\n**Unstructured:** http://unstructured-api:8000/general/v0/general",
+        "height": 228,
+        "width": 664
+      },
+      "id": "f733c28e-79aa-4683-8122-c5499a88e281",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        17392,
+        -1168
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ocr-receipt",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "file"
+        }
+      },
+      "id": "eaba33a9-5f38-412d-8a91-2f3c605d621b",
+      "name": "Webhook: Upload File",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        17408,
+        -912
+      ],
+      "webhookId": "ocr-receipt-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// รับไฟล์จาก webhook - multipart (field=file) หรือ raw binary\nconst input = $input.first();\nconst binaryKeys = input.binary ? Object.keys(input.binary) : [];\nconst body = input.json?.body || {};\n\nif (!binaryKeys.length) {\n  const hint = body.file && typeof body.file === 'string' && body.file.includes('/')\n    ? ' (body.file เป็น path ไม่ใช่ไฟล์จริง - ตรวจสอบว่า Bruno/Client ส่งไฟล์เป็น File ไม่ใช่ Text)'\n    : '';\n  throw new Error('ไม่พบไฟล์ ส่ง multipart field=file หรือ raw binary' + hint);\n}\n\nconst fileKey = binaryKeys.find(k => /^(file|data|document|image)(\\d*)$/.test(k)) || binaryKeys[0];\nconst binaryData = input.binary[fileKey];\nconst filename = binaryData.fileName || binaryData.file_name || 'document';\n\nreturn [{\n  json: { filename, source_field: fileKey },\n  binary: { data: binaryData }\n}];"
+      },
+      "id": "bd2f699d-7843-4f51-ab05-c8345175d3a6",
+      "name": "Prepare File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        17632,
+        -912
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://unstructured-api:8000/general/v0/general",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "strategy",
+              "value": "hi_res"
+            },
+            {
+              "name": "languages",
+              "value": "tha+eng"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "39b018ba-3c6e-4a16-a976-d85c78264cba",
+      "name": "Unstructured OCR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        17856,
+        -912
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ดึงทุก element ไม่ตัดทิ้ง - รวม text จากทุก field ที่มี\nconst allItems = $input.all();\nconst metadata = $('Prepare File').first().json;\nconst prepBinary = $('Prepare File').first().binary?.data;\n\nconst elements = allItems.length > 1 ? allItems.map(i => i.json) : (() => { const r = allItems[0]?.json; return Array.isArray(r) ? r : (r?.elements || [r]); })();\nconst cleanElements = elements\n  .filter(el => el && typeof el === 'object')\n  .map((el, i) => {\n    const text = (el.text || el.content || el.value || '').trim();\n    const tableHtml = el.metadata?.text_as_html;\n    return {\n      idx: i + 1,\n      type: el.type || 'Unknown',\n      text: text || (tableHtml ? '[Table]' : ''),\n      page: el.metadata?.page_number,\n      ...(tableHtml && { table_html: tableHtml })\n    };\n  })\n  .filter(el => el.text || el.table_html);\n\nif (!cleanElements.length) throw new Error('OCR ไม่พบข้อความในไฟล์');\n\nconst rawText = cleanElements.map(e => e.table_html ? e.table_html : e.text).filter(Boolean).join('\\n\\n');\nconst fullContent = cleanElements.map(e => `[${e.idx}] ${e.type} (p${e.page || '?'}):\\n${(e.table_html || e.text || '').trim()}`).join('\\n---\\n');\n\nreturn [{\n  json: {\n    filename: metadata.filename,\n    elements: cleanElements,\n    raw_text: rawText,\n    full_content: fullContent,\n    word_count: rawText.split(/\\s+/).filter(w => w).length,\n    element_count: cleanElements.length,\n    image_base64: prepBinary?.data || null,\n    mime_type: prepBinary?.mimeType || (metadata.filename?.match(/\\.(png|webp)$/i) ? 'image/png' : 'image/jpeg')\n  }\n}];"
+      },
+      "id": "431e4570-c512-4b81-aaa1-02388645161f",
+      "name": "Format OCR Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        18080,
+        -912
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyCkDJwDuYage0hR59-aNjdSr-oq0hAs-cg",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents: [{ parts: [{ text: 'ขั้นตอนที่ 1: แก้คำ OCR ที่อ่านผิด (เช่น ช่องว่างระหว่างตัวอักษรไทย \"บ ิ ล เต ็ ม\" -> \"บิลเต็ม\" รวมคำที่แยกผิดให้อ่านได้)\\nขั้นตอนที่ 2: จากข้อความที่แก้แล้ว สรุปเป็น JSON\\n\\nฟิลด์: vendor, address, phone, date, receipt_no, items (array {name, quantity, unit_price, amount}), subtotal, tax, total, payment_method, raw_notes. ใช้ค่าที่แก้แล้ว ไม่ใช้ค่าดิบจาก OCR\\n\\nตอบเป็น JSON เท่านั้น ไม่มีข้อความอื่น\\n\\n=== OCR Content (' + $json.element_count + ' elements) ===\\n' + $json.full_content }] }], generationConfig: { temperature: 0.1, maxOutputTokens: 8192 } }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "cd5ea1d5-2b5d-4971-9da9-5697395ba7fb",
+      "name": "AI: Structure Data (Gemini)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        18304,
+        -912
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// รวมผลลัพธ์ OCR + AI structure + elements\nconst ocrData = $('Format OCR Text').first().json;\nconst aiResponse = $input.first().json;\n\nlet structured = null;\nconst content = aiResponse.candidates?.[0]?.content?.parts?.[0]?.text;\nif (content) {\n  const parseJson = (s) => { if (!s || typeof s !== 'string') return null; try { return JSON.parse(s); } catch (_) { return null; } };\n  let toParse = content.trim();\n  const codeBlock = toParse.match(/```(?:json)?\\s*([\\s\\S]*?)(?:```|$)/);\n  if (codeBlock && codeBlock[1]) toParse = codeBlock[1].trim();\n  const braceMatch = toParse.match(/(\\{[\\s\\S]*)/);\n  if (braceMatch) toParse = braceMatch[1];\n  structured = parseJson(toParse);\n  if (!structured && toParse.includes('{')) {\n    let fixed = toParse;\n    let escape = false, inStr = false;\n    for (let i = 0; i < toParse.length; i++) {\n      const c = toParse[i];\n      if (escape) { escape = false; continue; }\n      if (c === '\\\\') { escape = true; continue; }\n      if (c === '\"') inStr = !inStr;\n    }\n    if (inStr) fixed += '\"';\n    const stack = [];\n    for (const c of fixed) { if (c === '{') stack.push('}'); else if (c === '[') stack.push(']'); else if (c === '}' || c === ']') stack.pop(); }\n    fixed += stack.reverse().join('');\n    structured = parseJson(fixed);\n  }\n  if (!structured) structured = { raw_parsed: content };\n}\n\nreturn [{\n  json: {\n    success: true,\n    filename: ocrData.filename,\n    raw_text: ocrData.raw_text,\n    full_content: ocrData.full_content,\n    word_count: ocrData.word_count,\n    element_count: ocrData.element_count,\n    elements: ocrData.elements,\n    structured\n  }\n}];"
+      },
+      "id": "cd87fe43-9fef-4083-b85b-f46c6073991b",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        18528,
+        -912
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyCkDJwDuYage0hR59-aNjdSr-oq0hAs-cg",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ contents: [{ parts: [{ text: 'สรุปใบเสร็จด้านล่างเป็นภาษาไทย 2-4 ประโยค กระชับ อ่านง่าย ระบุร้าน วันที่ รายการหลัก ยอดรวม\\n\\n' + JSON.stringify($json.structured, null, 2) }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 1024 } }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "a44c5a18-fa99-406b-9644-ed488b717b89",
+      "name": "AI: Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        18752,
+        -912
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// รวม structured + summary\nconst prev = $('Format Response').first().json;\nconst summaryRes = $input.first().json;\nconst summary = summaryRes.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';\n\nreturn [{ json: { ...prev, summary } }];"
+      },
+      "id": "1ac90380-4a71-4dc7-9447-71a096fa57dd",
+      "name": "Format Final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        18976,
+        -912
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "fce09976-c24b-4051-9ddc-a10d16179dad",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        19200,
+        -912
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### © 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+        "height": 156,
+        "width": 1112,
+        "color": 4
+      },
+      "id": "89e61bbf-e8c3-452c-a134-526a6779736a",
+      "name": "Copyright Notice",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        17392,
+        -1344
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook: Upload File": {
+      "main": [
+        [
+          {
+            "node": "Prepare File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare File": {
+      "main": [
+        [
+          {
+            "node": "Unstructured OCR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unstructured OCR": {
+      "main": [
+        [
+          {
+            "node": "Format OCR Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format OCR Text": {
+      "main": [
+        [
+          {
+            "node": "AI: Structure Data (Gemini)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Structure Data (Gemini)": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "AI: Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Summary": {
+      "main": [
+        [
+          {
+            "node": "Format Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Final": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1cf8e511-223a-4bb4-b905-542b716007fb",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "8ZqbSTgROpRm8dONAhRIm",
+  "tags": [
+    {
+      "updatedAt": "2026-02-06T04:09:34.751Z",
+      "createdAt": "2026-02-06T04:09:34.751Z",
+      "id": "wLdl3v8jlLGKpxQz",
+      "name": "Example"
+    }
+  ]
+}

@@ -1,0 +1,690 @@
+{
+  "name": "BSC01 - Understand n8n Nodes",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        496
+      ],
+      "id": "e156a08c-7248-4e98-b807-f17cea4370ab",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "content": "# Trigger Node Type\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+        "height": 608,
+        "width": 640,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "216e8ad1-4dae-4678-9f7f-1d445dc8212b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "path": "webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        384,
+        304
+      ],
+      "id": "d9957823-2256-4119-913f-b46b0d70c297",
+      "name": "Webhook",
+      "webhookId": "b95bfbd5-817f-4f4d-b405-77ff578c96bd"
+    },
+    {
+      "parameters": {
+        "content": "# AI Node Type\n",
+        "height": 608,
+        "width": 832,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1344,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "44d71953-9b5f-47dd-aa2b-cfe0dc3c261c",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        1424,
+        256
+      ],
+      "id": "dd73902c-5d63-40a5-8e88-7c4116903504",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        1424,
+        480
+      ],
+      "id": "31c7e8d1-ef54-44fb-8270-135e22085d5f",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        1808,
+        480
+      ],
+      "id": "dc0b2dca-45ac-4956-b0f9-c7edd7e4ccd4",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
+      "typeVersion": 1.6,
+      "position": [
+        1808,
+        256
+      ],
+      "id": "896646d2-a73f-4d41-9523-c0077e0595e1",
+      "name": "Question and Answer Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        928
+      ],
+      "id": "014d4fac-69ee-49e1-9f39-d2d5133a1221",
+      "name": "Google Gemini Chat Model"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        1824,
+        928
+      ],
+      "id": "d0e2777e-2884-4131-a44f-defbba771b1b",
+      "name": "DeepSeek Chat Model"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1648,
+        928
+      ],
+      "id": "670ca212-b074-435d-a4e6-3dcf5ac30a8b",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "content": "# Memory Node Type\n",
+        "height": 320,
+        "width": 384,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1344,
+        1120
+      ],
+      "typeVersion": 1,
+      "id": "a144f59d-21f4-4033-b0aa-6967fd086993",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# Flow Node Type\n",
+        "height": 608,
+        "width": 640
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        672,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "787754d1-c165-47e7-abde-a81bc9952408",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9bb89db8-653f-4e06-94cc-36abfcb3328f",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        304
+      ],
+      "id": "5973d7c3-8e2b-4ea4-aaf9-baa009cf0445",
+      "name": "If",
+      "notesInFlow": true,
+      "notes": "ฟหกาด่าฟห้ดา่ฟห้าด่้หกดหกด"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "f087bbed-2719-4488-bf32-048ddc2830bf"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        736,
+        512
+      ],
+      "id": "ff8b241b-0314-445c-91e3-9b46786f9847",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "content": "# Data Transformation Node Type\n",
+        "height": 688,
+        "width": 640
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        672,
+        752
+      ],
+      "typeVersion": 1,
+      "id": "f9bf44f9-4e48-4cd7-b330-7891dc17ff4e",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1024,
+        304
+      ],
+      "id": "002e4f7d-b2cc-42d4-9c4b-18d7dff215cc",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e9f0bede-f81a-45f6-b548-f14b4c6db939",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        512
+      ],
+      "id": "44335378-b673-4d21-a13c-85d0f2630745",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        752,
+        880
+      ],
+      "id": "aee1bc48-ccb6-4103-a170-9d7458dde290",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        880
+      ],
+      "id": "8505e7e3-f696-4ac4-a83e-a643e11a96af",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        752,
+        1072
+      ],
+      "id": "8afa00bf-f151-448f-859d-42840120a5d6",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        1072
+      ],
+      "id": "2a081aa6-7574-4604-9416-5f79dafac47c",
+      "name": "Code"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        512
+      ],
+      "id": "b7ea512f-adbf-4286-878f-254d960cc2b5",
+      "name": "Wait",
+      "webhookId": "5a5d3e12-e2ca-435c-9b20-cecd586b577c"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1824,
+        1696
+      ],
+      "id": "b2a6bb42-8595-4b52-a910-f799a6b12e96",
+      "name": "Append row in sheet"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1408,
+        1264
+      ],
+      "id": "bc6f04d5-7ce0-44d6-be48-e74d93a2989f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        1264
+      ],
+      "id": "f05f402c-07b0-46ca-8b1d-518525b934fb",
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1984,
+        1264
+      ],
+      "id": "9d0e92a0-5474-48ce-a1a8-4d3037a60ac3",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "content": "# Tools Node Type\n",
+        "height": 320,
+        "width": 432,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1744,
+        1120
+      ],
+      "typeVersion": 1,
+      "id": "96182fac-efe8-4b7c-a065-030cf400c0f1",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        752,
+        1264
+      ],
+      "id": "47c3f035-b772-4498-b21a-00f0c1dbc4dc",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "content": "# LLMs Node Type\n",
+        "height": 352,
+        "width": 832,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1344,
+        752
+      ],
+      "typeVersion": 1,
+      "id": "8cb6d794-1e05-4068-aa8e-87f74204ae54",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "# Basic01: N8N Node\nthis flow will introduce basic of node in n8n",
+        "height": 96,
+        "width": 2176,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "7a9d9bdb-c3cf-4689-8754-19e440673418",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        112,
+        304
+      ],
+      "id": "868a3fc9-98ec-49fa-acae-c55c54a88778",
+      "name": "Trigger Manually",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        496
+      ],
+      "id": "defbb30c-d075-4d32-91a6-f9d3119eb4ab",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1568,
+        1264
+      ],
+      "id": "a3cf6b11-e3c6-4310-8f39-ee22483f9d38",
+      "name": "Postgres Chat Memory"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        928
+      ],
+      "id": "c1b69095-ee6a-4465-8212-99abdedfb063",
+      "name": "Groq Chat Model"
+    },
+    {
+      "parameters": {
+        "content": "# Community Node\n\nn8n community nodes คือส่วนเสริม (Extensions) หรือโหนดเชื่อมต่อที่สร้างขึ้นโดยนักพัฒนาภายนอกหรือผู้ใช้งานในชุมชน n8n เพื่อขยายขีดความสามารถของระบบให้รองรับบริการที่ตัวโปรแกรมหลัก (Native Nodes) ยังไม่มีให้ใช้งาน\n",
+        "height": 320,
+        "width": 624,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        688,
+        1536
+      ],
+      "typeVersion": 1,
+      "id": "d9a25751-42b9-440a-adfb-01fa36cd0f8f",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-searxng.searxng",
+      "typeVersion": 1,
+      "position": [
+        832,
+        1696
+      ],
+      "id": "6b55ccc3-8373-4f31-8d29-001dd5615b4d",
+      "name": "Searxng"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-browserless.browserless",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        1696
+      ],
+      "id": "ad201c11-29e2-4e9f-961b-8c118d596b99",
+      "name": "Scrape"
+    },
+    {
+      "parameters": {
+        "content": "# App Nodes\n\nApp Nodes (หรือ Integrations): เป็นโหนดที่สร้างขึ้นมาเพื่อเชื่อมต่อกับบริการภายนอกโดยเฉพาะ มีการตั้งค่าที่ออกแบบมาให้ตรงกับ API ของแอปนั้นๆ",
+        "height": 320,
+        "width": 960,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1360,
+        1536
+      ],
+      "typeVersion": 1,
+      "id": "bdef392b-dc97-4f98-a6f1-4ceb48ebf40b",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1408,
+        1696
+      ],
+      "id": "5a6c6e27-a876-4b1d-86ca-872cc4ba47a5",
+      "name": "Select rows from a table"
+    },
+    {
+      "parameters": {
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.line",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        1696
+      ],
+      "id": "a837452e-6dd6-4f58-a09c-de9ee8e47093",
+      "name": "Send a notification"
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        2016,
+        1696
+      ],
+      "id": "de7e9dec-9efc-4a63-af06-825948f0f824",
+      "name": "Postgres PGVector Store"
+    }
+  ],
+  "pinData": {},
+  "connections": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "3e57bb61-583f-4395-9084-f28e001c18ce",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "aQ_AceMjSEaafYB6T7Txl",
+  "tags": [
+    {
+      "updatedAt": "2026-02-06T04:08:50.539Z",
+      "createdAt": "2026-02-06T04:08:50.539Z",
+      "id": "bV84VYB2WRB2bwyr",
+      "name": "Basic"
+    }
+  ]
+}

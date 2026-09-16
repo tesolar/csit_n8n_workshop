@@ -1,0 +1,392 @@
+{
+  "name": "EXM09 - Ai Voice Chat",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "441fdff8-717e-4f5f-9e76-7cfbe18ef854",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        -704,
+        272
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KCNl8nll2LdXHyBa",
+          "name": "Google Gemini(PaLM) Api account [TK]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {}
+      },
+      "id": "1f7e3833-539b-40d8-b3dc-78feaf5675d6",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -128,
+        48
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice_message",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "7f482cb9-3240-477e-909c-9b0c2816a3ed",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1152,
+        144
+      ],
+      "webhookId": "e9f611eb-a8dd-4520-8d24-9f36deaca528",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "resource": "speech",
+        "voice": {
+          "__rl": true,
+          "value": "FGY2WhTYpPnrIDTdsKH5",
+          "mode": "list",
+          "cachedResultName": "Laura - Enthusiast, Quirky Attitude"
+        },
+        "text": "={{ $json.output }}",
+        "additionalOptions": {
+          "model": {
+            "__rl": true,
+            "value": "eleven_v3",
+            "mode": "list",
+            "cachedResultName": "Eleven v3"
+          },
+          "outputFormat": "mp3_44100_128",
+          "languageCode": "th",
+          "voiceSettings": "{  \n   \"stability\": 0.45,  \n   \"similarity_boost\": 0.75,  \n   \"style\": 0.15,  \n   \"use_speaker_boost\": true,  \n   \"speed\": 1.05\n}"
+        },
+        "requestOptions": {}
+      },
+      "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        48
+      ],
+      "id": "ccfa9aa2-c70c-4e89-b80a-55606ab9a29f",
+      "name": "Convert text to speech",
+      "credentials": {
+        "elevenLabsApi": {
+          "id": "MD1waS9aXT9NcGTn",
+          "name": "ElevenLabs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant female.\nTo maintain context and fully understand the user's question, always review the previous conversation between you and him before providing an answer.\n\nAnswer in female conversation.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -704,
+        48
+      ],
+      "id": "c4d0f3dc-9b54-4a2f-8330-b3ddfd2d25a1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "content": "###  ขั้นตอนการรับ ElevenLab API Key \n1. __Log in เข้าสู่ระบบ__: ไปที่เว็บไซต์ [https://elevenlabs.io](https://elevenlabs.io) แล้วทำการลงชื่อเข้าใช้บัญชีของคุณ\n1. __ไปที่เมนู Developers__: มองที่มุมซ้ายล่างของหน้าจอ  -> __เลือก \"API Keys\"__\n1. __Create Key__: กด \"Create Key\" ตั้งชื่อ -> ปิด Restrict Key -> Create Key \n1. __คัดลอก API Key__\n",
+        "width": 608,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1056,
+        432
+      ],
+      "typeVersion": 1,
+      "id": "6ebe0372-62f3-4614-baf5-867036053dec",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# 🎙️AI Voice-to-Voice Assistant Workflow\n\n### Workflow นี้คือระบบ \"ผู้ช่วยที่โต้ตอบด้วยเสียง\" โดยใช้เทคโนโลยีของ __ElevenLabs__ ทำหน้าที่เป็นทั้ง \"หู\" (ฟังเสียงคน) และ \"ปาก\" (พูดตอบ) ผสานกับสมองของ __Google Gemini__",
+        "height": 176,
+        "width": 816,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -992,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "693b6385-6cef-4175-9d4a-930f2b7036a0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "👂 ElevenLabs Scribe: แปลงเสียงผู้ใช้เป็น Text\nSST",
+        "height": 272,
+        "width": 224,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -992,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "187b7cb2-98c4-4717-a43e-163ab72cbe8f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "🗣️ ElevenLabs Voice: เจนเสียง AI 'Bella' ตอบกลับ\nTTS",
+        "height": 272,
+        "width": 224,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -416,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "c9c9cce9-cf22-4f0c-9442-738ab4660f82",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "นอกจาก ElevenLabs แล้วก็ยังมี tool อื่นๆ ที่ทำหน้าที่ในการฟังเสียงและสร้างเสียงได้เหมือนกัน",
+        "height": 224,
+        "width": 288,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1376,
+        368
+      ],
+      "typeVersion": 1,
+      "id": "b857551e-035d-46a1-bb75-e6e003c85531",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -1296,
+        432
+      ],
+      "id": "878947c0-a1af-4388-b683-d95b5c29c650",
+      "name": "Transcribe a recording"
+    },
+    {
+      "parameters": {
+        "content": "### © 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+        "height": 156,
+        "width": 1112,
+        "color": 4
+      },
+      "id": "9199b01b-8f16-48d0-b666-036e6eee85c2",
+      "name": "Copyright Notice",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        -432
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "speech",
+        "operation": "speechToText",
+        "additionalOptions": {},
+        "requestOptions": {}
+      },
+      "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        48
+      ],
+      "id": "a7ff2db9-3c9f-4e09-9896-f04522b4d383",
+      "name": "Transcribe audio or video",
+      "credentials": {
+        "elevenLabsApi": {
+          "id": "MD1waS9aXT9NcGTn",
+          "name": "ElevenLabs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://drive.usercontent.google.com/download?id=1ytOXjaoWHVmVJMVVzT7xsfyIy4IDeaGc&export=download&authuser=0&confirm=t&uuid=cc41da94-415e-4e77-9e2f-7680206b0bf3&at=AGN2oQ06pISEx2WY3_e3Mb7TY7_O:1774592321688",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1152,
+        -48
+      ],
+      "id": "1b7c24f0-2379-4ee0-b024-ca8f06099b20",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1376,
+        -48
+      ],
+      "id": "52396c9a-631b-4ded-b76e-95753775f135",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "test-0dacb3b5-4bcd-47dd-8456-dcfd8c258204"
+      },
+      "id": "75f021f8-b2f5-4660-945e-02de1169d3f7",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        -576,
+        272
+      ],
+      "typeVersion": 1.2
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Transcribe audio or video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert text to speech": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Convert text to speech",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe audio or video": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Transcribe audio or video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "788732f2-eab2-4b36-ba42-367d0011de8f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "yLC5VMDHXGlsmujnzPBbU",
+  "tags": [
+    {
+      "updatedAt": "2026-02-06T04:09:34.751Z",
+      "createdAt": "2026-02-06T04:09:34.751Z",
+      "id": "wLdl3v8jlLGKpxQz",
+      "name": "Example"
+    }
+  ]
+}

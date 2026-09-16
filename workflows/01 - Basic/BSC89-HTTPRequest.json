@@ -1,0 +1,101 @@
+{
+  "name": "BSC89 - HTTP Request",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        240
+      ],
+      "id": "29a942ed-82f3-4fc5-bb83-c076bd1857ad",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://fake-json-api.mock.beeceptor.com/users",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        240
+      ],
+      "id": "2962fac6-b026-4949-a891-aa062adaa6ae",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one$input.first().json.id\nconst company = $input.all().map((item)=>({company:item.json.company}));\n\nreturn company;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        240
+      ],
+      "id": "402bec0d-5f71-42fd-b7ef-2f10e27a1599",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "content": "### 🌐 HTTP Request Node\nAn essential node for connecting with external systems.\n* **Purpose:** Fetches data from or sends data to an external API.\n* **Methods:** Supports standard HTTP actions (GET, POST, PUT, DELETE, etc.).\n* **Customization:** Allows for custom Headers, Query Parameters, and Body content.",
+        "width": 560
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "6c4f9e03-074d-4f70-8168-1c919ce1eb84",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c7df6567-c965-40d7-b679-fcfd3227986b",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "qqV6YW6nriC6XWhMbTkfN",
+  "tags": [
+    {
+      "updatedAt": "2026-02-06T04:08:50.539Z",
+      "createdAt": "2026-02-06T04:08:50.539Z",
+      "id": "bV84VYB2WRB2bwyr",
+      "name": "Basic"
+    }
+  ]
+}

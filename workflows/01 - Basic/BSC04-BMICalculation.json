@@ -1,0 +1,570 @@
+{
+  "name": "BSC04 - BMI Calculation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        224
+      ],
+      "id": "de679457-e93f-4fc0-a1ab-3530b14b57fa",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger Node",
+        "height": 384,
+        "width": 288
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -320,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "e8634d83-3ef2-426b-92c6-1cdd88992d84",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Data Source",
+        "height": 384,
+        "width": 288,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -16,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "6566b023-d56b-4c94-8886-59d3f6d62e0d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Basic04\n__Level:__ Easy\n\n__Order:__ จัดการข้อมูลตัวอย่างในค่า `premium` ที่มีค่าว่างให้กลายเป็น 0 และหลังจากนั้นคิดหาค่าเฉลี่ยของ `premium` ของลูกค้าทั้งหมด\n\n__Goal:__ การเลือกใช้ Node ต่าง ๆ และการเชื่อมต่อระหว่าง Node \n\n__Practice:__  สร้าง Workflow สำหรับคำนวณค่า BMI และแยก BMI category\n\n\n",
+        "height": 384,
+        "width": 1840,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -320,
+        -320
+      ],
+      "typeVersion": 1,
+      "id": "d5963ec5-4d15-4adf-a3da-23e8441664de",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Process",
+        "height": 384,
+        "width": 1232,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        288,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "9f9b70e5-9b51-4ea9-8944-88376dd29279",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "31f8f875-5e90-4718-90ac-ed929b0c6cd9",
+              "leftValue": "={{ $json.premium }}",
+              "rightValue": 18.5,
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        384,
+        160
+      ],
+      "id": "488dbc97-22aa-45ab-b2da-468bfd5757a2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.bmi }}",
+                    "rightValue": 18.5,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    },
+                    "id": "08425c16-8580-4bad-95cf-2786763fe833"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Underweight"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "712e7098-2162-4847-b26a-d10c7d542f5a",
+                    "leftValue": "={{ $json.bmi }}",
+                    "rightValue": 25,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Normal"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d144b87b-709f-4bc8-baec-8a0baf280374",
+                    "leftValue": "={{ $json.bmi }}",
+                    "rightValue": 30,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Overweight"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        128
+      ],
+      "id": "ecf5ab96-4cae-40dc-ac3b-3ace6c32f250",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "content": "## Your Workspace",
+        "height": 464,
+        "width": 1664,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -320,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "48a016b5-6cc8-4a38-a795-e28b1080ef9e",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    \"user_id\": \"U001\",\n    \"age\": 24,\n    \"height\": 168,\n    \"weight\": 60,\n    \"salary\": 22000,\n    \"premium\": null\n  },\n  {\n    \"user_id\": \"U002\",\n    \"age\": 29,\n    \"height\": 172,\n    \"weight\": 70,\n    \"salary\": 32000,\n    \"premium\": 1800\n  },\n  {\n    \"user_id\": \"U003\",\n    \"age\": 35,\n    \"height\": 165,\n    \"weight\": 68,\n    \"salary\": 45000,\n    \"premium\": 2500\n  },\n  {\n    \"user_id\": \"U004\",\n    \"age\": 41,\n    \"height\": 170,\n    \"weight\": 75,\n    \"salary\": 52000,\n    \"premium\": null\n  },\n  {\n    \"user_id\": \"U005\",\n    \"age\": 33,\n    \"height\": 160,\n    \"weight\": 55,\n    \"salary\": 38000,\n    \"premium\": 2100\n  },\n  {\n    \"user_id\": \"U006\",\n    \"age\": 27,\n    \"height\": 175,\n    \"weight\": 72,\n    \"salary\": 29000,\n    \"premium\": 1600\n  },\n  {\n    \"user_id\": \"U007\",\n    \"age\": 46,\n    \"height\": 168,\n    \"weight\": 78,\n    \"salary\": 60000,\n    \"premium\": 3200\n  },\n  {\n    \"user_id\": \"U008\",\n    \"age\": 52,\n    \"height\": 162,\n    \"weight\": 70,\n    \"salary\": 72000,\n    \"premium\": null\n  },\n  {\n    \"user_id\": \"U009\",\n    \"age\": 31,\n    \"height\": 180,\n    \"weight\": 85,\n    \"salary\": 41000,\n    \"premium\": 2300\n  },\n  {\n    \"user_id\": \"U010\",\n    \"age\": 22,\n    \"height\": 158,\n    \"weight\": 50,\n    \"salary\": 18000,\n    \"premium\": null\n  },\n  {\n    \"user_id\": \"U011\",\n    \"age\": 38,\n    \"height\": 173,\n    \"weight\": 74,\n    \"salary\": 48000,\n    \"premium\": 2600\n  },\n  {\n    \"user_id\": \"U012\",\n    \"age\": 44,\n    \"height\": 169,\n    \"weight\": 69,\n    \"salary\": 55000,\n    \"premium\": 3000\n  },\n  {\n    \"user_id\": \"U013\",\n    \"age\": 28,\n    \"height\": 166,\n    \"weight\": 63,\n    \"salary\": 31000,\n    \"premium\": null\n  },\n  {\n    \"user_id\": \"U014\",\n    \"age\": 50,\n    \"height\": 171,\n    \"weight\": 80,\n    \"salary\": 68000,\n    \"premium\": 3500\n  },\n  {\n    \"user_id\": \"U015\",\n    \"age\": 34,\n    \"height\": 164,\n    \"weight\": 67,\n    \"salary\": 42000,\n    \"premium\": 2400\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        224
+      ],
+      "id": "9f828f4c-3d23-46f2-863c-a8318f3d4be8",
+      "name": "Example Customer Data"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        880,
+        304
+      ],
+      "id": "bf31f5b6-d894-4578-a537-f8e170568202",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "average",
+              "field": "salary"
+            },
+            {
+              "aggregation": "average",
+              "field": "premium"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        1136,
+        144
+      ],
+      "id": "08c907cb-f431-4340-9c4c-dae9be34047f",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "896811a5-9e25-490e-954c-8def1a7e8f90",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        640,
+        144
+      ],
+      "id": "62045435-ca5d-406f-9e6f-54fac339bc51",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "content": "# 🧩 Exercise: Calculate BMI & Classify Health Risk\n\n## 🎯 Objective\nIn this exercise, you will:\n- Learn how to process structured data in n8n\n- Calculate **BMI (Body Mass Index)** using JavaScript in a Code node\n- Classify users into **BMI categories**\n- Practice using Code, IF, and Filter nodes\n\n---\n\n## 📥 Input Data\nYou are given a list of users with the following fields:\n\n- `user_id`\n- `age`\n- `height` (cm)\n- `weight` (kg)\n- `salary`\n- `premium` (may contain `null`)\n\nEach item represents **one user**.\n\n---\n\n## 🧮 Step 1: BMI Calculation\n\n### BMI Formula\n",
+        "height": 800,
+        "width": 848
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -320,
+        992
+      ],
+      "typeVersion": 1,
+      "id": "b751ea63-aff0-4248-a9fb-309d65340332",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "\n### Important Notes\n- Height must be converted from **centimeters (cm)** to **meters (m)**\n- Round the BMI value to **2 decimal places**\n- If height or weight is missing, BMI should be set to `null`\n\n---\n\n## 🏷️ Step 2: BMI Category Classification\n\nAfter calculating BMI, classify each user into one of the following categories:\n\n| BMI Range            | Category        | Description                  |\n|----------------------|-----------------|------------------------------|\n| BMI < 18.5           | Underweight     | Lower than normal body weight|\n| 18.5 ≤ BMI < 25      | Normal          | Healthy weight range         |\n| 25 ≤ BMI < 30        | Overweight      | Higher than normal weight    |\n| BMI ≥ 30             | Obese           | High health risk             |\n\n---\n\n## 🔀 Suggested Workflow\n1. **Code Node**\n   - Calculate BMI\n   - Add `bmi` field to each user\n\n2. **Code Node / IF Node**\n   - Determine `bmi_category` based on BMI value\n\n3. **Filter / IF Node (Optional)**\n   - Find users with:\n     - BMI ≥ 25\n     - Missing `premium`\n     - High health risk\n\n---\n\n## 🧠 Learning Outcome\nBy completing this exercise, you should be able to:\n- Understand how n8n processes data item by item\n- Apply mathematical formulas in automation workflows\n- Handle `null` values safely\n- Turn raw data into **actionable insights**\n\n🚀 Bonus Challenge:\n- Calculate average BMI per group\n- Recommend insurance premium based on BMI category\n",
+        "height": 1008,
+        "width": 976
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        544,
+        992
+      ],
+      "typeVersion": 1,
+      "id": "6d9125c7-3aaa-4c1e-9b65-f93f8960f870",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * This Code node calculates BMI (Body Mass Index)\n * BMI formula:\n *   BMI = weight (kg) / (height (m))^2\n *\n * Assumptions:\n * - height is provided in centimeters (cm)\n * - weight is provided in kilograms (kg)\n */\n\nreturn items.map((item) => {\n  // Extract data from the current item\n  const heightCm = item.json.height;\n  const weightKg = item.json.weight;\n\n  let bmi = null;\n\n  // Validate input values\n  if (heightCm && weightKg) {\n    // Convert height from centimeters to meters\n    const heightMeter = heightCm / 100;\n\n    // Calculate BMI\n    bmi = weightKg / (heightMeter * heightMeter);\n\n    // Round BMI to 2 decimal places\n    bmi = Number(bmi.toFixed(2));\n  }\n\n  // Add BMI back to the original JSON\n  return {\n    json: {\n      ...item.json,\n      bmi,\n    },\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        304
+      ],
+      "id": "f58b3009-32e8-4381-a96e-063559636312",
+      "name": "BMI Calculator"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "067532d3-0cd1-45a9-89ad-40f46074a392",
+              "name": "premium",
+              "value": "=0",
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        288
+      ],
+      "id": "16d44c0b-6ced-4415-955b-49d0dba619fd",
+      "name": "Edit Fields 'premium' to 0"
+    },
+    {
+      "parameters": {
+        "jsCode": "const answer = $input.all().map((j)=>j.json);\nconst expected = [\n  {\n    \"average_salary\": 43533.333333333336,\n    \"average_premium\": 1666.6666666666667\n  }\n];\n\n\nconst idsB = new Set(answer.map(item => item.id));\nconst matches = expected.filter(item => idsB.has(item.id));\n\nconst corrected = matches.length == expected.length;\nreturn [{corrected:corrected}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        656
+      ],
+      "id": "b8477412-1e14-4f38-95bc-039a21ecd9f7",
+      "name": "Check Answer"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f789da8d-9a67-4782-a886-31c939afe112",
+              "leftValue": "={{ $json.corrected }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1680,
+        656
+      ],
+      "id": "705de1bd-9385-4678-93d1-30744ba590a3",
+      "name": "Is Correct?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1904,
+        576
+      ],
+      "id": "fcc5921b-a701-43fd-998d-bf3c272a83d7",
+      "name": "✅ Yes, Correct Answer"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1904,
+        736
+      ],
+      "id": "0e276e06-1656-4b4c-890d-8a90ed4535cb",
+      "name": "❌ No, Wrong Answer"
+    },
+    {
+      "parameters": {
+        "content": "## Check Answer",
+        "height": 464,
+        "width": 800,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1360,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "1fe6bf38-0ae4-4536-920b-3b5c49994b4f",
+      "name": "Sticky Note7"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Example Customer Data": {
+      "main": [
+        []
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [],
+        [],
+        []
+      ]
+    },
+    "BMI Calculator": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "Filter": {
+      "main": [
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields 'premium' to 0": {
+      "main": [
+        []
+      ]
+    },
+    "Check Answer": {
+      "main": [
+        [
+          {
+            "node": "Is Correct?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Correct?": {
+      "main": [
+        [
+          {
+            "node": "✅ Yes, Correct Answer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ No, Wrong Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "801ae78c-1f57-4e93-9fa1-37c57eb62eda",
+  "meta": {
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "uuE2DtmkqYDnPEsAzTmsd",
+  "tags": [
+    {
+      "updatedAt": "2026-02-16T04:29:24.755Z",
+      "createdAt": "2026-02-16T04:29:24.755Z",
+      "id": "2RTwF3PSzSj7aZvH",
+      "name": "Practice"
+    },
+    {
+      "updatedAt": "2026-02-06T04:08:50.539Z",
+      "createdAt": "2026-02-06T04:08:50.539Z",
+      "id": "bV84VYB2WRB2bwyr",
+      "name": "Basic"
+    }
+  ]
+}

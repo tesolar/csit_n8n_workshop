@@ -1,0 +1,501 @@
+{
+  "name": "EXM20.1 - Vibe Code Format OCR Output",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        0
+      ],
+      "id": "db97d158-f352-445a-bd05-751dd4f7e584",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.opentyphoon.ai/v1/ocr",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "typhoon-ocr"
+            },
+            {
+              "name": "task_type",
+              "value": "default"
+            },
+            {
+              "name": "max_tokens",
+              "value": "16384"
+            },
+            {
+              "name": "temperature",
+              "value": "0.1"
+            },
+            {
+              "name": "top_p",
+              "value": "0.6"
+            },
+            {
+              "name": "repetition_penalty",
+              "value": "1.2"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "={{ $('Download file').first().binary.data }}"
+            },
+            {
+              "name": "pages",
+              "value": "={{ JSON.stringify(Array.from({ length: $json.numpages }, (_, i) => i + 1)) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        560,
+        0
+      ],
+      "id": "6fcd7059-187b-4c02-9052-f8d61fa9a7af",
+      "name": "Typhoon-OCR API",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "FwkJo02WG7AMs4JE",
+          "name": "Typhoon OCR [DC]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        0
+      ],
+      "id": "735e1bf1-7b37-460e-81df-3791c1ccc398",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allData = items[0].json; // รับค่า Array จาก OCR Node\nconst results = [];\n\n// เข้าถึงเนื้อหา Text จาก OCR ในจุด choices[0].message.content\nconst content = allData.results[0].message.choices[0].message.content;\n\n// ฟังก์ชันสำหรับดึงข้อมูลด้วย Regex\nconst extract = (regex, text, defaultValue = \"\") => {\n  const match = text.match(regex);\n  return match ? match[1].trim() : defaultValue;\n};\n\n// 1. ดึงชื่อ-นามสกุล\nconst insured_name = extract(/ชื่อ-นามสกุลผู้เอาประกันภัย\\s+(.+?)(?=\\s+อายุ|$)/, content);\n\n// 2. ดึงอายุ (แปลงเป็น Number)\nconst insured_age = parseInt(extract(/อายุ\\s+(\\d+)/, content)) || 0;\n\n// 3. ดึงเลขบัตรประชาชน (13 หลัก)\nconst id_card = extract(/เลขประจำตัวประชาชน\\s+(\\d{13})/, content);\n\n// 4. ดึงวันที่เสียชีวิต\nconst death_date = extract(/วันที่มรณกรรม\\s+([\\d/]+)/, content);\n\n// 5. ตรวจสอบว่าเป็นอุบัติเหตุหรือไม่ (เช็คจากเครื่องหมาย ✓ หรือเนื้อหา)\nconst is_accident = content.includes(\"✓อุบัติเหตุ\") || content.includes(\"มรณกรรมผิดธรรมชาติ\");\n\n// 6. ดึงรายละเอียดสาเหตุ (กรณีอุบัติเหตุ)\nconst accident_cause = extract(/สาเหตุจาก\\s+(.+?)(?=\\s+สถานที่|$)/, content);\n\n// 7. ดึงสาขาที่รับเรื่อง (เช็คจาก ณ บริษัท... สาขา ...)\nconst branch = extract(/สำนักงานใหญ่\\/สาขา\\s+(.+?)(?=\\n|$)/, content);\n\nresults.push({\n  json: {\n    insured_name,\n    insured_age,\n    id_card,\n    death_date,\n    is_accident,\n    accident_cause,\n    branch\n  }\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        0
+      ],
+      "id": "7ab47187-23d8-406b-9f45-31040bf7f571",
+      "name": "Format OCR Output"
+    },
+    {
+      "parameters": {
+        "content": "## หลักการของ Vibe Coding:\n- บอก AI ว่าอยากได้อะไร \n- AI เขียนโค้ดให้\n- ถ้ามี error ก็ paste error ให้ AI แก้ต่อ\n- ไม่จำเป็นต้องเข้าใจโค้ดทุกบรรทัด\n\n\n**ข้อดี:**\n- สร้างโปรแกรมได้เร็วมาก\n- คนที่ไม่ได้เป็น developer ก็ทำได้\n- เหมาะกับ prototype หรือ side project\n\n**ข้อเสีย:**\n- โค้ดที่ได้อาจมีบั๊กซ่อนอยู่\n- ถ้าไม่เข้าใจโค้ด จะแก้ปัญหาลึก ๆ ได้ยาก\n- ไม่เหมาะกับระบบที่ต้องการความปลอดภัยสูง\n",
+        "height": 368,
+        "width": 336,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1392,
+        656
+      ],
+      "typeVersion": 1,
+      "id": "f2ae9f4d-dd5b-4d33-83ba-64b7daf55860",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## ตัวอย่าง Prompt ที่ใช้ในการ vibe code สำหรับ Code node\n---\n\nช่วยเขียน Code javascript สำหรับใช้ใน n8n Code Node แปลงผลลัพท์ OCR นี้เป็น JSON ที่สามารถนำไปบันทึก DB ได้ใน node ถัดไป\nโดยใช้ Schema ดังนี้:\n- `insured_name`: (string) ชื่อ-นามสกุล\n- `insured_age`: (number) อายุ\n- `id_card`: (string) เลขบัตรประชาชน 13 หลัก\n- `death_date`: (string) วันที่เสียชีวิต\n- `is_accident`: (boolean) เป็นอุบัติเหตุหรือไม่\n- `accident_cause`: (string) รายละเอียดสาเหตุ\n- `branch`: (string) สาขาที่รับเรื่อง\n\n\n[วาง OCR output ที่เป็นผลลัพธ์จาก node Typhoon-OCR API]\n",
+        "height": 688,
+        "width": 464,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        800,
+        -528
+      ],
+      "typeVersion": 1,
+      "id": "25e7fac8-a0e0-4eb1-a5c5-adefafbbd0bf",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## 📝 ตัวอย่าง Prompt สำหรับส่งให้ AI ในกรณีที่ต้องการความแม่นยำมากขึ้นใน Prompt เดียว\n\n**Context:**\nฉันใช้ n8n Code Node ภาษา JavaScript เพื่อประมวลผลข้อมูลจาก OCR\n\n**Input Data:**\nนี่คือ JSON output จริงที่ได้รับจาก OCR node (มีข้อมูลกระจายหลายหน้าในอาเรย์ `results`):\n[วาง OCR output ที่เป็นผลลัพธ์จาก node Typhoon-OCR API]\n\n\n**Output Schema ที่ต้องการ:**\nช่วยเขียน Code เพื่อ Extract ข้อมูลจาก HTML Table ใน `content` ออกมาเป็น Flat JSON Array โดยใช้ Schema ดังนี้:\n- `insured_name`: (string) ชื่อ-นามสกุล\n- `insured_age`: (number) อายุ\n- `id_card`: (string) เลขบัตรประชาชน 13 หลัก\n- `death_date`: (string) วันที่เสียชีวิต\n- `is_accident`: (boolean) เป็นอุบัติเหตุหรือไม่\n- `accident_cause`: (string) รายละเอียดสาเหตุ\n- `branch`: (string) สาขาที่รับเรื่อง\n\n\n**Edge Case & Constraints:**\n1. **Data Cleaning:** ตัวเลขใน HTML มีเครื่องหมาย comma (`,`) และบางจุดอาจเป็นเครื่องหมายลบ (`-`) หรือค่าว่าง ให้แปลงเป็นตัวเลข (Number) ที่นำไปคำนวณต่อได้เสมอ (ถ้าว่างให้เป็น 0)\n2. **Row Filtering:** ข้ามแถวที่เป็น Header ของตาราง และแถวที่เป็นชื่อภาค (เช่น \"ภาคกลาง\")\n3. **Multi-page Merge:** รวมข้อมูลจากทุกหน้าในอาเรย์ `results` เข้าด้วยกัน\n\n**Next Node Destination:**\nOutput นี้จะถูกส่งต่อไปบันทึกลง **PostgreSQL Database** ดังนั้นขอให้คืนค่าออกมาเป็นอาเรย์ของอ็อบเจกต์ `[ { json: { ... } } ]`\n\n**Instructions:**\n- ตอบเป็น JavaScript Code สำหรับ n8n เท่านั้น\n- ใส่ Comment อธิบาย Logic สำคัญสั้นๆ\n- ไม่ต้องอธิบายทฤษฎีประกอบ เอาแต่ Code มาเลย\n",
+        "height": 832,
+        "width": 672,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        704,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "2a26fd0d-9c52-4a92-8838-c9c7d2e4523c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# What happened to the workflow?\n### สี่งที่ต้องการ\n- ต้องการนำข้อมูลหนังสือเรียกร้องค่าสินไหมมรณกรรม ที่ได้จากการทำ OCR จากไฟล์ PDF ไปบันทึกลงใน Database \n### ปัญหาที่พบ\n- ข้อมูลที่ได้จากการทำ OCR ไม่สามารถอยู่ในรูปแบบที่จะนำใช้งานต่อได้\n### วิธีที่ใช้แก้\n-  ใช้ code node ทำการ format ผลลัพธ์ OCR โดยให้ AI เช่น Gemini, ChatGPT เขียน code จัด format ให้ สำหรับใช้ใน code node",
+        "height": 272,
+        "width": 592,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        -384
+      ],
+      "typeVersion": 1,
+      "id": "6c48339f-b84f-4972-a129-0bc7fe64da25",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "WBpG8OMjabdAe6Kp",
+          "mode": "list",
+          "cachedResultName": "insurance_claims",
+          "cachedResultUrl": "/projects/ViLj2OhWPm2Oq87T/datatables/WBpG8OMjabdAe6Kp"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "is_accident": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "insured_name",
+              "displayName": "insured_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "insured_age",
+              "displayName": "insured_age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "id_card",
+              "displayName": "id_card",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "death_date",
+              "displayName": "death_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "is_accident",
+              "displayName": "is_accident",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "accident_cause",
+              "displayName": "accident_cause",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "branch",
+              "displayName": "branch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        0
+      ],
+      "id": "5fa280a2-8fff-43d2-982a-30a2b9bc1005",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "insurance_claims",
+        "columns": {
+          "column": [
+            {
+              "name": "insured_name"
+            },
+            {
+              "name": "insured_age",
+              "type": "number"
+            },
+            {
+              "name": "id_card"
+            },
+            {
+              "name": "death_date"
+            },
+            {
+              "name": "is_accident",
+              "type": "boolean"
+            },
+            {
+              "name": "accident_cause"
+            },
+            {
+              "name": "branch"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        160
+      ],
+      "id": "6ad5124d-cabe-46b4-86e9-270de3b701fc",
+      "name": "Create a data table"
+    },
+    {
+      "parameters": {
+        "content": "### © 2026 Candid GRC Co., Ltd. All Rights Reserved.\n\nThis workflow, including its structure, automation logic, integration, architecture, and embedded code, is proprietary intellectual property of Candid GRC Co., Ltd.\n\nUnauthorized reproduction, redistribution, reverse engineering, or commercial deployment is strictly prohibited without prior written consent.",
+        "height": 156,
+        "width": 1112,
+        "color": 4
+      },
+      "id": "65f15d6f-3701-42a3-9c71-0acd05080cfb",
+      "name": "Copyright Notice",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### ทำการ OCR ด้วย Typhoon-OCR API",
+        "height": 240,
+        "width": 384,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        320,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "f019a7e9-d893-4d99-91a1-5b9f781695f9",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "### ดึง File Pdf ที่จะใช้\n(หนังสือเรียกร้องค่าสินไหมมรณกรรม)",
+        "height": 240,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "c3408dde-7f08-477e-938a-c80ee8c59ea9",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "### insert ข้อมูลที่ format แล้วลงฐานข้อมูล",
+        "height": 368,
+        "width": 320,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1408,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "4c3d6fdc-42a0-434c-8294-b19fcc88a8bc",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "### Format ข้อมูล เพื่อใช้ใน Database",
+        "height": 208,
+        "width": 288,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        880,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "c58467c3-e19e-43fe-975b-543acf83d227",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "https://drive.google.com/file/d/1e1Xy14nb-PVdsD0Zxn2aqjA_T0KWyymb/view?usp=sharing",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        64,
+        0
+      ],
+      "id": "00e50f58-9f9c-4ee9-ad08-5a434c831d0d",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lIazF92y73qsqOPU",
+          "name": "Google Drive account [DC]"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Typhoon-OCR API": {
+      "main": [
+        [
+          {
+            "node": "Format OCR Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Typhoon-OCR API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format OCR Output": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ce95a059-f67d-48d3-a960-f9cde4aa7cba",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "20cf75cd0417fe5be3c3d8dcf7163bcd4dd5f0947193527bf3d55f850ac76577"
+  },
+  "id": "Xu6CP9kTndznIjje",
+  "tags": [
+    {
+      "updatedAt": "2026-02-06T04:09:34.751Z",
+      "createdAt": "2026-02-06T04:09:34.751Z",
+      "id": "wLdl3v8jlLGKpxQz",
+      "name": "Example"
+    }
+  ]
+}
