@@ -66,8 +66,11 @@ services:
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:-n8n-secret-encryption-key-for-workshop-32chars}
       N8N_COMMUNITY_PACKAGES_ENABLED: "true"
 
-      # Code Node Permissions (Python & JS)
-      NODE_FUNCTION_ALLOW_EXTERNAL: requests,math,datetime
+      # Code Node Permissions: npm package names the JS Code node's require()
+      # may import (comma-separated). None of this workshop's workflows need
+      # an external package, so this is left empty — add real npm package
+      # names here (e.g. "axios,lodash") only if a workflow needs one.
+      NODE_FUNCTION_ALLOW_EXTERNAL: ""
       NODE_FUNCTION_ALLOW_BUILTIN: "*"
     ports:
       - "${N8N_PORT:-5678}:5678"
@@ -84,7 +87,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@workshop.local}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@csit-n8n-workshop.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-adminpass}
       PGADMIN_CONFIG_SERVER_MODE: "False"
       TZ: ${TZ:-Asia/Bangkok}

@@ -40,7 +40,7 @@
 | บริการ | URL / Host | Username / Email | Password | รายละเอียด |
 |---|---|---|---|---|
 | **n8n Web UI** | `http://localhost:5678` | *(ตั้งค่าตอนเริ่มใช้งาน)* | *(ตั้งค่าตอนเริ่มใช้งาน)* | แพลตฟอร์มสร้าง Workflow |
-| **pgAdmin Web UI** | `http://localhost:5050` | `admin@workshop.local` | `adminpass` | หน้าต่างดูตารางฐานข้อมูล |
+| **pgAdmin Web UI** | `http://localhost:5050` | `admin@csit-n8n-workshop.com` | `adminpass` | หน้าต่างดูตารางฐานข้อมูล |
 | **PostgreSQL (n8n Node)** | Host: `postgres` / Port: `5432` | `n8n` | `n8npass` | Database: `n8n` |
 | **Gemini API** | Google AI Studio | - | *(API Key ส่วนตัว)* | ใช้สำหรับ AI Agent / Embeddings |
 
@@ -64,7 +64,7 @@ Chat Trigger ──> AI Agent (Gemini Chat Model) ──> Memory (Window Buffer)
 ```
 
 ### กิจกรรม 2: ติดตั้ง Credential & ตั้งค่า Gemini
-- เชื่อมต่อ Google Gemini Chat Model (`gemini-1.5-flash` หรือ `gemini-2.0-flash`)
+- เชื่อมต่อ Google Gemini Chat Model (`gemini-flash-latest` — alias ที่ชี้ไปยังรุ่น Flash ล่าสุดของ Gemini เสมอ เพื่อไม่ให้ Workflow เสียเมื่อ Google ปลดรุ่นโมเดลเก่า เช่น `gemini-1.5-flash` และ `gemini-2.0-flash` ที่ถูกปลดระวางไปแล้ว)
 
 ### กิจกรรม 3: ออกแบบ System Prompt ผู้ช่วยครู
 ```text
@@ -94,7 +94,7 @@ Chat Trigger ──> AI Agent (Gemini Chat Model) ──> Memory (Window Buffer)
 - ชื่อ-นามสกุล (`student_name`)
 - ระดับชั้น (`grade_level`)
 - วิชา (`subject`)
-- คำถามข้อที่ 1, 2, 3 (ตัวเลือก / เติมคำ)
+- คำถามข้อที่ 1-10 (แบบเลือกตอบ Dropdown, คะแนนเต็มข้อละ 1 คะแนน รวม 10 คะแนน)
 
 ### กิจกรรม 2: คำนวณคะแนนอัตโนมัติ (Code Node / Edit Fields)
 คำนวณ:
@@ -116,8 +116,13 @@ n8n Form Trigger ──> Calculate Score ──> PostgreSQL Node (Insert) ──
 
 ## ช่วงที่ 4: Workshop 3 - AI วิเคราะห์ผลสอบภาพรวมจาก Database (40 นาที)
 
-### กิจกรรม 1: ดึงข้อมูลคะแนนสอบจาก PostgreSQL
-- ใช้ Postgres Node Query:
+### กิจกรรม 1: ดึงข้อมูลคะแนนสอบจาก n8n Data Table
+- ใช้โหนด **Data Table (Get Many Rows)** ไม่ต้องตั้งค่า Credential:
+  - Resource: `Row` / Operation: `Get Many Rows`
+  - Data Table: `exam_results`
+  - Filter: `subject` = `วิทยาศาสตร์`
+  - Order By: `score` แบบ `Ascending`
+- *(ทางเลือก: ถ้าใช้ Workshop 2 แบบ PostgreSQL แทน สามารถเปลี่ยนมาใช้ Postgres Node Query แบบเดิมได้เช่นกัน)*
   ```sql
   SELECT student_name, grade_level, subject, score, total_score, percentage, pass_status 
   FROM exam_results 
@@ -127,7 +132,7 @@ n8n Form Trigger ──> Calculate Score ──> PostgreSQL Node (Insert) ──
 ### กิจกรรม 2: ส่งข้อมูลให้ AI Agent สรุปรายงานเชิงลึก
 Workflow:
 ```text
-Manual / Schedule Trigger ──> PostgreSQL (Execute Query) ──> Aggregate / Code ──> AI Agent (Gemini) ──> Generate HTML / Email Report
+Manual / Schedule Trigger ──> n8n Data Table (Get Many Rows) ──> Aggregate / Code ──> AI Agent (Gemini) ──> Generate HTML / Email Report
 ```
 
 ### Prompt ตัวอย่าง:
@@ -165,6 +170,27 @@ CREATE TABLE IF NOT EXISTS exam_results (
     total_score NUMERIC(5, 2) NOT NULL,
     percentage NUMERIC(5, 2) NOT NULL,
     pass_status VARCHAR(20) NOT NULL,
+    -- คำตอบที่นักเรียนเลือกในแต่ละข้อ (ข้อสอบ 10 ข้อ) ใช้ย้อนดูว่าตอบผิดข้อไหนบ้าง
+    answer_1 VARCHAR(255),
+    answer_2 VARCHAR(255),
+    answer_3 VARCHAR(255),
+    answer_4 VARCHAR(255),
+    answer_5 VARCHAR(255),
+    answer_6 VARCHAR(255),
+    answer_7 VARCHAR(255),
+    answer_8 VARCHAR(255),
+    answer_9 VARCHAR(255),
+    answer_10 VARCHAR(255),
+    is_correct_1 BOOLEAN,
+    is_correct_2 BOOLEAN,
+    is_correct_3 BOOLEAN,
+    is_correct_4 BOOLEAN,
+    is_correct_5 BOOLEAN,
+    is_correct_6 BOOLEAN,
+    is_correct_7 BOOLEAN,
+    is_correct_8 BOOLEAN,
+    is_correct_9 BOOLEAN,
+    is_correct_10 BOOLEAN,
     submit_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 ```

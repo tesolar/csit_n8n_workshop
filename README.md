@@ -41,7 +41,7 @@ docker compose ps
 - 🤖 **n8n Web UI**: [http://localhost:5678](http://localhost:5678)
   - เข้าใช้งานครั้งแรก: ให้ตั้งชื่อบัญชีผู้ใช้และรหัสผ่านของท่าน
 - 🐘 **pgAdmin Web UI**: [http://localhost:5050](http://localhost:5050)
-  - **Email**: `admin@workshop.local`
+  - **Email**: `admin@csit-n8n-workshop.com`
   - **Password**: `adminpass`
   - *ระบบได้เชื่อมต่อฐานข้อมูล PostgreSQL ไว้ให้โดยอัตโนมัติแล้ว*
 
@@ -66,10 +66,11 @@ docker compose ps
 
 1. **Workshop 1: AI Agent ผู้ช่วยครูประจำชั้น** ([`workflows/01_ai_agent_teacher_assistant.json`](workflows/01_ai_agent_teacher_assistant.json))
    - Chat Trigger ➡️ AI Agent (Gemini) ➡️ Chat Response + Memory
-2. **Workshop 2: ระบบทำข้อสอบออนไลน์ด้วย n8n Form** ([`workflows/02_exam_form_to_postgres.json`](workflows/02_exam_form_to_postgres.json))
-   - n8n Form ➡️ คำนวณคะแนน ➡️ บันทึกผลลงตาราง `exam_results` ➡️ คืนหน้าผลคะแนน HTML
+2. **Workshop 2: ระบบทำข้อสอบออนไลน์ด้วย n8n Form** — มี 2 รูปแบบให้เลือก:
+   - ✅ **แนะนำ:** [`workflows/02_exam_form_to_datatable.json`](workflows/02_exam_form_to_datatable.json) — บันทึกผลลง **n8n Data Table** (มีปุ่ม ⚙️ Setup สร้างตารางให้อัตโนมัติในตัว ไม่ต้องสร้างมือ) **ต้องใช้ไฟล์นี้ถ้าต้องการให้ Workshop 3 เห็นข้อมูลจริงจากนักเรียน**
+   - [`workflows/02_exam_form_to_postgres.json`](workflows/02_exam_form_to_postgres.json) — บันทึกผลลงตาราง **Postgres** `exam_results` แทน (เหมาะสำหรับสาธิตการเขียนลง Postgres โดยเฉพาะ, Workshop 3 ในปัจจุบันไม่ได้อ่านจากตารางนี้)
 3. **Workshop 3: AI วิเคราะห์ผลสอบภาพรวมจาก Database** ([`workflows/03_ai_exam_analytics.json`](workflows/03_ai_exam_analytics.json))
-   - ดึงข้อมูลจากตาราง `exam_results` ➡️ สรุปสถิติ ➡️ AI Agent สรุปรายงานเชิงลึกและค้นหากลุ่มเสี่ยง
+   - ดึงข้อมูลจาก **n8n Data Table** `exam_results` (ไม่ใช่ Postgres) ➡️ สรุปสถิติ + อัตราตอบผิดรายข้อ ➡️ AI Agent สรุปรายงานเชิงลึกและค้นหากลุ่มเสี่ยง
 4. **Bonus: pgvector & Semantic Search**
    - ตาราง `knowledge_documents` สำหรับทำคลังความรู้/แผนการสอนด้วย Embeddings
 
