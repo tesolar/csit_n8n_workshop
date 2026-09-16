@@ -1,0 +1,198 @@
+{
+  "name": "Workshop 3 - AI วิเคราะห์ผลสอบภาพรวมจาก Database",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📊 Workshop 3: AI วิเคราะห์ผลสอบภาพรวม\n\n**กระบวนการทำงาน:**\n1. 🔘 **Manual / Schedule Trigger**: กดสั่งเริ่มการวิเคราะห์ข้อมูล\n2. 🗃️ **n8n Data Table (Get Many Rows)**: ดึงข้อมูลคะแนนสอบจากตาราง `exam_results` (กรอง `subject` + เรียงคะแนนน้อย➡️มาก)\n3. 🧮 **Prepare Analytics Data (Code)**: คำนวณสถิติเบื้องต้น (ค่าเฉลี่ย, สูงสุด, ต่ำสุด, อัตราผ่าน)\n4. 🤖 **AI Agent (Gemini)**: วิเคราะห์เชิงลึก สรุปจุดแข็ง-จุดอ่อน ค้นหากลุ่มเสี่ยง และเสนอแนะแผนการสอนสำหรับครู\n\n⚠️ Workflow นี้ดึงข้อมูลจาก **n8n Data Table** ไม่ใช่ Postgres — ต้องใช้คู่กับ [`02_exam_form_to_datatable.json`](./02_exam_form_to_datatable.json) (ไม่ใช่ `02_exam_form_to_postgres.json`) ถึงจะเห็นข้อมูลจริงจากนักเรียน และตาราง `exam_results` ต้องถูกสร้างไว้ก่อน (ใช้ปุ่ม **⚙️ Setup** ในไฟล์ Workshop 2 นั้น)",
+        "height": 440,
+        "width": 380,
+        "color": 5
+      },
+      "id": "sticky-w3-overview",
+      "name": "Sticky Note - ภาพรวมระบบ AI Analytics",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🗃️ การตั้งค่าโหนด n8n Data Table\n\nโหนด **Get Exam Results (Data Table)** ตั้งค่าไว้ดังนี้ (ไม่ต้องตั้ง Credential ใด ๆ เพราะ Data Table เป็นฟีเจอร์ในตัว n8n เอง):\n- **Resource**: Row\n- **Operation**: Get Many Rows\n- **Data Table**: `exam_results`\n- **Filter**: `subject` = `วิทยาศาสตร์` (เปลี่ยนวิชาได้ตามต้องการ)\n- **Order By**: `score` ➡️ `Ascending`\n- **Return All**: เปิดไว้ (ดึงทุกแถวที่ตรงเงื่อนไข)\n\n*ระบบจะเรียงลำดับจากคะแนนน้อยไปหามาก เพื่อให้ AI โฟกัสกลุ่มที่ต้องการการดูแลเร่งด่วนได้อย่างชัดเจน*\n\n⚠️ ถ้ายังไม่เคยสร้างตาราง `exam_results` มาก่อน ให้ไปกดปุ่ม **⚙️ Setup** ในไฟล์ `02_exam_form_to_datatable.json` ก่อน 1 ครั้ง",
+        "height": 340,
+        "width": 460,
+        "color": 2
+      },
+      "id": "sticky-w3-sql-note",
+      "name": "Sticky Note - SQL Query",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🤖 Prompt คำสั่งสั่งงาน AI Agent\n\nเราส่งข้อมูล 2 ส่วนให้ Gemini:\n1. **สถิติภาพรวม** ที่ Code Node คำนวณไว้ล่วงหน้า\n2. **ข้อมูลผลสอบรายบุคคล** ในรูปแบบ JSON\n\nGemini จะประมวลผลและสร้างรายงานการประเมิน 4 มิติ:\n- สถิติและข้อสังเกตภาพรวม\n- กลุ่มเสี่ยงและการแก้ไข\n- นักเรียนผลงานดีเด่น\n- แผนพัฒนาการจัดการเรียนรู้",
+        "height": 340,
+        "width": 420,
+        "color": 4
+      },
+      "id": "sticky-w3-ai-note",
+      "name": "Sticky Note - การวิเคราะห์ด้วย AI",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        740,
+        -160
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "node-manual-trigger",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        140,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "exam_results",
+          "mode": "name"
+        },
+        "returnAll": true,
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "subject",
+              "condition": "eq",
+              "keyValue": "วิทยาศาสตร์"
+            }
+          ]
+        },
+        "orderBy": true,
+        "orderByColumn": "score",
+        "orderByDirection": "ASC",
+        "options": {}
+      },
+      "id": "node-datatable-query",
+      "name": "Get Exam Results (Data Table)",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        360,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n// เลือกเฉพาะฟิลด์ที่เกี่ยวข้อง (ตัด id / createdAt / updatedAt ของ Data Table ออก)\nconst records = items.map((i) => {\n  const r = i.json;\n  return {\n    student_name: r.student_name,\n    grade_level: r.grade_level,\n    subject: r.subject,\n    test_name: r.test_name,\n    score: r.score,\n    total_score: r.total_score,\n    percentage: r.percentage,\n    pass_status: r.pass_status,\n    answer_1: r.answer_1,\n    answer_2: r.answer_2,\n    answer_3: r.answer_3,\n    answer_4: r.answer_4,\n    answer_5: r.answer_5,\n    answer_6: r.answer_6,\n    answer_7: r.answer_7,\n    answer_8: r.answer_8,\n    answer_9: r.answer_9,\n    answer_10: r.answer_10,\n    is_correct_1: r.is_correct_1,\n    is_correct_2: r.is_correct_2,\n    is_correct_3: r.is_correct_3,\n    is_correct_4: r.is_correct_4,\n    is_correct_5: r.is_correct_5,\n    is_correct_6: r.is_correct_6,\n    is_correct_7: r.is_correct_7,\n    is_correct_8: r.is_correct_8,\n    is_correct_9: r.is_correct_9,\n    is_correct_10: r.is_correct_10,\n    submitted_at: r.submitted_at\n  };\n});\n\nif (!records || records.length === 0) {\n  return [{\n    json: {\n      error: \"ไม่มีข้อมูลผลสอบในตาราง exam_results กรุณาทำข้อสอบผ่านแบบฟอร์มก่อน (และตรวจสอบว่าสร้างตาราง exam_results ผ่านปุ่ม Setup ใน Workshop 2 แล้ว)\"\n    }\n  }];\n}\n\nconst totalStudents = records.length;\nconst totalScores = records.reduce((sum, r) => sum + Number(r.score), 0);\nconst avgScore = (totalScores / totalStudents).toFixed(2);\nconst maxScore = Math.max(...records.map(r => Number(r.score)));\nconst minScore = Math.min(...records.map(r => Number(r.score)));\nconst passCount = records.filter(r => r.pass_status === 'ผ่าน').length;\nconst failCount = totalStudents - passCount;\nconst passRate = ((passCount / totalStudents) * 100).toFixed(1);\n\n// สรุปอัตราตอบผิดรายข้อ (1-3) เพื่อให้ AI เห็นว่าข้อไหนนักเรียนพลาดบ่อยที่สุด\nconst perQuestionWrongRate = Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {\n  const answered = records.filter((r) => r[`is_correct_${n}`] !== undefined && r[`is_correct_${n}`] !== null);\n  const wrongCount = answered.filter((r) => r[`is_correct_${n}`] === false).length;\n  return {\n    question: n,\n    wrong_count: wrongCount,\n    wrong_rate: answered.length ? `${((wrongCount / answered.length) * 100).toFixed(1)}%` : 'N/A'\n  };\n});\n\nreturn [{\n  json: {\n    summary: {\n      subject: records[0].subject || 'วิทยาศาสตร์',\n      test_name: records[0].test_name || 'แบบทดสอบบทที่ 1',\n      total_students: totalStudents,\n      avg_score: avgScore,\n      max_score: maxScore,\n      min_score: minScore,\n      pass_count: passCount,\n      fail_count: failCount,\n      pass_rate: `${passRate}%`,\n      per_question_wrong_rate: perQuestionWrongRate\n    },\n    students_data: records,\n    formatted_data_string: JSON.stringify(records, null, 2)\n  }\n}];"
+      },
+      "id": "node-prep-analytics",
+      "name": "Prepare Analytics Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=คุณคือผู้เชี่ยวชาญด้านการวัดผลและวิเคราะห์ข้อมูลทางการศึกษา (Educational Data Analyst & Pedagogical Specialist)\n\nจากข้อมูลสถิติและผลคะแนนสอบวิชา {{ $json.summary.subject }} ({{ $json.summary.test_name }}):\n\n[สถิติภาพรวม]\n- จำนวนนักเรียนทั้งหมด: {{ $json.summary.total_students }} คน\n- คะแนนเฉลี่ย: {{ $json.summary.avg_score }} คะแนน (จากคะแนนเต็ม 10)\n- คะแนนสูงสุด: {{ $json.summary.max_score }} คะแนน | ต่ำสุด: {{ $json.summary.min_score }} คะแนน\n- อัตราการสอบผ่าน: {{ $json.summary.pass_rate }} (ผ่าน {{ $json.summary.pass_count }} คน, ไม่ผ่าน {{ $json.summary.fail_count }} คน)\n\n[อัตราการตอบผิดรายข้อ]\n{{ JSON.stringify($json.summary.per_question_wrong_rate) }}\n\n[ข้อมูลคะแนนรายบุคคล พร้อมคำตอบรายข้อ]\n{{ $json.formatted_data_string }}\n\nโปรดจัดทำ \"รายงานสรุปผลการประเมินการเรียนรู้และข้อเสนอแนะเชิงลึกสำหรับครูผู้สอน\" ในรูปแบบ Markdown ภาษาไทยที่อ่านง่ายและจัดวางสวยงาม โดยครอบคลุม 5 มิติ:\n1. 📊 **บทสรุปผลสัมฤทธิ์ทางการเรียนภาพรวม**: ตีความคะแนนเฉลี่ยและการกระจายตัวของคะแนน\n2. ⚠️ **วิเคราะห์นักเรียนกลุ่มที่ต้องพัฒนาเร่งด่วน**: ระบุชื่อนักเรียนที่ไม่ผ่านเกณฑ์ พร้อมวิเคราะห์ปัญหาและแนวทางการสอนเสริมรายบุคคล\n3. 🌟 **ชื่นชมนักเรียนกลุ่มผลการเรียนดีเด่น**: ระบุชื่อนักเรียนที่มีคะแนนยอดเยี่ยม และแนวทางส่งเสริมศักยภาพเพิ่มเติม\n4. 🎯 **จุดที่นักเรียนพลาดบ่อยที่สุดรายข้อ**: ใช้อัตราการตอบผิดรายข้อ ระบุว่าข้อสอบข้อใดนักเรียนพลาดกันมากที่สุด และวิเคราะห์ว่าเพราะเหตุใด (เนื้อหายากเกินไป, สอนไม่ครอบคลุม, ข้อสอบกำกวม ฯลฯ)\n5. 💡 **ข้อเสนอแนะเชิงกลยุทธ์สำหรับครูผู้สอน**: ปรับปรุงเนื้อหา วิธีการจัดการเรียนรู้ และข้อสอบสำหรับบทเรียนต่อไป",
+        "options": {}
+      },
+      "id": "node-ai-report-agent",
+      "name": "AI Report Generator (Gemini)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        860,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-flash-latest",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "id": "node-gemini-analytics",
+      "name": "Google Gemini Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        860,
+        480
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gemini-api-cred",
+          "name": "Google Gemini API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get Exam Results (Data Table)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Exam Results (Data Table)": {
+      "main": [
+        [
+          {
+            "node": "Prepare Analytics Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Analytics Data": {
+      "main": [
+        [
+          {
+            "node": "AI Report Generator (Gemini)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Report Generator (Gemini)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
