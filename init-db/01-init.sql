@@ -13,8 +13,52 @@ CREATE TABLE IF NOT EXISTS exam_results (
     total_score NUMERIC(5, 2) NOT NULL,
     percentage NUMERIC(5, 2) NOT NULL,
     pass_status VARCHAR(20) NOT NULL,
+    -- คำตอบที่นักเรียนเลือกในแต่ละข้อ (ข้อสอบ 10 ข้อ เก็บไว้เพื่อย้อนดูว่าตอบผิดข้อไหน)
+    answer_1 VARCHAR(255),
+    answer_2 VARCHAR(255),
+    answer_3 VARCHAR(255),
+    answer_4 VARCHAR(255),
+    answer_5 VARCHAR(255),
+    answer_6 VARCHAR(255),
+    answer_7 VARCHAR(255),
+    answer_8 VARCHAR(255),
+    answer_9 VARCHAR(255),
+    answer_10 VARCHAR(255),
+    is_correct_1 BOOLEAN,
+    is_correct_2 BOOLEAN,
+    is_correct_3 BOOLEAN,
+    is_correct_4 BOOLEAN,
+    is_correct_5 BOOLEAN,
+    is_correct_6 BOOLEAN,
+    is_correct_7 BOOLEAN,
+    is_correct_8 BOOLEAN,
+    is_correct_9 BOOLEAN,
+    is_correct_10 BOOLEAN,
     submit_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- สำหรับฐานข้อมูลที่เคยสร้างตารางนี้ไว้ก่อนมีคอลัมน์คำตอบรายข้อ (init script
+-- นี้รันแค่ครั้งแรกที่สร้าง volume เท่านั้น) ให้รันคำสั่งนี้เพิ่มคอลัมน์ที่ขาด:
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS answer_1 VARCHAR(255);
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS answer_2 VARCHAR(255);
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS answer_3 VARCHAR(255);
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS answer_4 VARCHAR(255);
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS answer_5 VARCHAR(255);
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS answer_6 VARCHAR(255);
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS answer_7 VARCHAR(255);
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS answer_8 VARCHAR(255);
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS answer_9 VARCHAR(255);
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS answer_10 VARCHAR(255);
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS is_correct_1 BOOLEAN;
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS is_correct_2 BOOLEAN;
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS is_correct_3 BOOLEAN;
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS is_correct_4 BOOLEAN;
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS is_correct_5 BOOLEAN;
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS is_correct_6 BOOLEAN;
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS is_correct_7 BOOLEAN;
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS is_correct_8 BOOLEAN;
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS is_correct_9 BOOLEAN;
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS is_correct_10 BOOLEAN;
 
 -- เพิ่มข้อมูลตัวอย่างเริ่มต้นตามเอกสาร instructure.md
 INSERT INTO exam_results (student_name, grade_level, subject, test_name, score, total_score, percentage, pass_status, submit_time)
