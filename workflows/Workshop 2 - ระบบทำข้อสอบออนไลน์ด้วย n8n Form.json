@@ -35,6 +35,263 @@
     },
     {
       "parameters": {
+        "content": "## 🗃️ การสร้าง n8n Data Table\n\n### วิธีที่ 1 (แนะนำ): สร้างอัตโนมัติด้วยปุ่มเดียว\nกดปุ่ม ▶️ **Execute step** บนโหนด **\"⚙️ Setup: สร้างตาราง exam_results\"** ด้านล่างนี้ครั้งเดียว ระบบจะสร้างตาราง `exam_results` พร้อมคอลัมน์ทั้งหมดให้อัตโนมัติ (ถ้ามีตารางชื่อนี้อยู่แล้วจะข้ามไปใช้ตารางเดิม ไม่เขียนทับ)\n\n### วิธีที่ 2: สร้างเองผ่านเมนู (ถ้าไม่อยากใช้โหนด)\n1. ในเมนูด้านซ้ายของ n8n เลือก **Data Tables**\n2. กด **Create table** และตั้งชื่อว่า `exam_results`\n3. เพิ่มคอลัมน์ดังนี้:\n   - `student_name` (Text)\n   - `grade_level` (Text)\n   - `subject` (Text)\n   - `test_name` (Text)\n   - `score` (Number)\n   - `total_score` (Number)\n   - `percentage` (Number)\n   - `pass_status` (Text)\n   - `answer_1` … `answer_10` (Text) — คำตอบรายข้อ\n   - `is_correct_1` … `is_correct_10` (Boolean) — ถูก/ผิดรายข้อ\n   - `submitted_at` (Text / Date)",
+        "height": 500,
+        "width": 780,
+        "color": 5
+      },
+      "id": "sticky-w2-datatable-setup",
+      "name": "Sticky Note - วิธีสร้าง Data Table",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1160,
+        1232
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "node-setup-trigger",
+      "name": "⚙️ Setup: กดตรงนี้เพื่อสร้างตาราง",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        1600
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "exam_results",
+        "columns": {
+          "column": [
+            {
+              "name": "student_name",
+              "type": "string"
+            },
+            {
+              "name": "grade_level",
+              "type": "string"
+            },
+            {
+              "name": "subject",
+              "type": "string"
+            },
+            {
+              "name": "test_name",
+              "type": "string"
+            },
+            {
+              "name": "score",
+              "type": "number"
+            },
+            {
+              "name": "total_score",
+              "type": "number"
+            },
+            {
+              "name": "percentage",
+              "type": "number"
+            },
+            {
+              "name": "pass_status",
+              "type": "string"
+            },
+            {
+              "name": "answer_1",
+              "type": "string"
+            },
+            {
+              "name": "answer_2",
+              "type": "string"
+            },
+            {
+              "name": "answer_3",
+              "type": "string"
+            },
+            {
+              "name": "answer_4",
+              "type": "string"
+            },
+            {
+              "name": "answer_5",
+              "type": "string"
+            },
+            {
+              "name": "answer_6",
+              "type": "string"
+            },
+            {
+              "name": "answer_7",
+              "type": "string"
+            },
+            {
+              "name": "answer_8",
+              "type": "string"
+            },
+            {
+              "name": "answer_9",
+              "type": "string"
+            },
+            {
+              "name": "answer_10",
+              "type": "string"
+            },
+            {
+              "name": "is_correct_1",
+              "type": "boolean"
+            },
+            {
+              "name": "is_correct_2",
+              "type": "boolean"
+            },
+            {
+              "name": "is_correct_3",
+              "type": "boolean"
+            },
+            {
+              "name": "is_correct_4",
+              "type": "boolean"
+            },
+            {
+              "name": "is_correct_5",
+              "type": "boolean"
+            },
+            {
+              "name": "is_correct_6",
+              "type": "boolean"
+            },
+            {
+              "name": "is_correct_7",
+              "type": "boolean"
+            },
+            {
+              "name": "is_correct_8",
+              "type": "boolean"
+            },
+            {
+              "name": "is_correct_9",
+              "type": "boolean"
+            },
+            {
+              "name": "is_correct_10",
+              "type": "boolean"
+            },
+            {
+              "name": "submitted_at",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": true
+        }
+      },
+      "id": "node-setup-create-datatable",
+      "name": "⚙️ Setup: สร้างตาราง exam_results",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        1600
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🎲 สร้างข้อมูลตัวอย่าง (Mock Data)\n\nไม่อยากกรอกฟอร์มเองทีละคน? กดปุ่ม ▶️ **Execute step** บนโหนด **\"🎲 Setup: สร้างข้อมูลตัวอย่าง\"** ด้านล่างนี้ ระบบจะ:\n\n1. สุ่มสร้างรายชื่อนักเรียนตัวอย่าง 12 คน พร้อมคำตอบและคะแนนแบบสุ่ม (สมจริง ~70% ตอบถูก)\n2. บันทึกลง Data Table `exam_results` ให้อัตโนมัติ\n\n⚠️ ต้องสร้างตาราง `exam_results` ก่อน (ดู Sticky Note ด้านซ้าย) มิฉะนั้นจะ insert ไม่ได้",
+        "height": 380,
+        "width": 780,
+        "color": 4
+      },
+      "id": "sticky-w2-mockdata-setup",
+      "name": "Sticky Note - สร้างข้อมูลตัวอย่าง",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1160,
+        1780
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "node-mockdata-trigger",
+      "name": "🎲 Setup: สร้างข้อมูลตัวอย่าง",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        2180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const students = [\n  { name: 'สมชาย ใจดี', grade: 'ม.1/1' },\n  { name: 'สมหญิง รักเรียน', grade: 'ม.1/1' },\n  { name: 'วิชัย ตั้งใจ', grade: 'ม.1/2' },\n  { name: 'มานี มีนา', grade: 'ม.1/2' },\n  { name: 'ปิติ ยินดี', grade: 'ม.1/3' },\n  { name: 'ชูใจ ใจงาม', grade: 'ม.1/3' },\n  { name: 'ดวงใจ สว่างไสว', grade: 'ม.1/4' },\n  { name: 'เอกชัย แข็งแรง', grade: 'ม.1/4' },\n  { name: 'พรทิพย์ โชคดี', grade: 'ม.1/1' },\n  { name: 'สุดา ขยันเรียน', grade: 'ม.1/2' },\n  { name: 'อนันต์ พากเพียร', grade: 'ม.1/3' },\n  { name: 'กมลชนก แสนดี', grade: 'ม.1/4' }\n];\n\n// คำถามทั้ง 10 ข้อ พร้อมตัวเลือกทั้งหมดและ index ของคำตอบที่ถูกต้อง (อ้างอิงจาก n8n Form Trigger)\nconst QUESTIONS = [\n  { options: ['เซลล์ (Cell)', 'อะตอม (Atom)', 'เนื้อเยื่อ (Tissue)', 'อวัยวะ (Organ)'], correctIndex: 0 },\n  { options: ['ไนโตรเจน (N2)', 'ออกซิเจน (O2)', 'ไฮโดรเจน (H2)', 'คาร์บอนไดออกไซด์ (CO2)'], correctIndex: 3 },\n  { options: ['100 องศาเซลเซียส', '0 องศาเซลเซียส', '50 องศาเซลเซียส', '37 องศาเซลเซียส'], correctIndex: 0 },\n  { options: ['นิวเคลียส (Nucleus)', 'คลอโรพลาสต์ (Chloroplast)', 'ไมโทคอนเดรีย (Mitochondria)', 'ไรโบโซม (Ribosome)'], correctIndex: 2 },\n  { options: ['แวคิวโอล (Vacuole)', 'ผนังเซลล์ (Cell Wall)', 'เยื่อหุ้มเซลล์ (Cell Membrane)', 'นิวเคลียส (Nucleus)'], correctIndex: 3 },\n  { options: ['ผนังเซลล์ (Cell Wall)', 'เยื่อหุ้มเซลล์ (Cell Membrane)', 'นิวเคลียส (Nucleus)', 'ไมโทคอนเดรีย (Mitochondria)'], correctIndex: 0 },\n  { options: ['การสังเคราะห์ด้วยแสง (Photosynthesis)', 'การหายใจ (Respiration)', 'การคายน้ำ (Transpiration)', 'การย่อยอาหาร (Digestion)'], correctIndex: 0 },\n  { options: ['สิ่งมีชีวิตหลายเซลล์ (Multicellular)', 'อวัยวะ (Organ)', 'สิ่งมีชีวิตเซลล์เดียว (Unicellular)', 'เนื้อเยื่อ (Tissue)'], correctIndex: 2 },\n  { options: ['ระบบอวัยวะ → อวัยวะ → เซลล์ → เนื้อเยื่อ', 'เซลล์ → เนื้อเยื่อ → อวัยวะ → ระบบอวัยวะ', 'อวัยวะ → เนื้อเยื่อ → เซลล์ → ระบบอวัยวะ', 'เนื้อเยื่อ → เซลล์ → อวัยวะ → ระบบอวัยวะ'], correctIndex: 1 },\n  { options: ['สร้างอาหารให้เซลล์โดยตรง', 'กำจัดของเสียออกจากเซลล์', 'สร้างพลังงาน (ATP) ให้เซลล์นำไปใช้งาน', 'ควบคุมการแบ่งตัวของเซลล์'], correctIndex: 2 }\n];\n\nconst results = [];\n\nfor (const student of students) {\n  const answers = [];\n  const isCorrect = [];\n  let correctCount = 0;\n\n  for (const q of QUESTIONS) {\n    // ~70% โอกาสตอบถูกในแต่ละข้อ เพื่อให้คะแนนกระจายตัวสมจริง\n    const answerCorrect = Math.random() < 0.7;\n    const wrongIndexes = q.options.map((_, i) => i).filter((i) => i !== q.correctIndex);\n    const chosenIndex = answerCorrect\n      ? q.correctIndex\n      : wrongIndexes[Math.floor(Math.random() * wrongIndexes.length)];\n\n    answers.push(q.options[chosenIndex]);\n    const correct = chosenIndex === q.correctIndex;\n    isCorrect.push(correct);\n    if (correct) correctCount++;\n  }\n\n  const score = correctCount;\n  const totalScore = 10;\n  const percentage = Math.round((score / totalScore) * 100 * 10) / 10;\n  const passStatus = percentage >= 50 ? 'ผ่าน' : 'ไม่ผ่าน';\n\n  // สุ่มเวลาส่งย้อนหลังภายใน 7 วัน ให้ข้อมูลดูสมจริง\n  const submittedDate = new Date();\n  submittedDate.setDate(submittedDate.getDate() - Math.floor(Math.random() * 7));\n  submittedDate.setHours(submittedDate.getHours() - Math.floor(Math.random() * 24));\n\n  results.push({\n    json: {\n      student_name: student.name,\n      grade_level: student.grade,\n      subject: 'วิทยาศาสตร์',\n      test_name: 'แบบทดสอบบทที่ 1: หน่วยของสิ่งมีชีวิต',\n      score: score,\n      total_score: totalScore,\n      percentage: percentage,\n      pass_status: passStatus,\n      answer_1: answers[0],\n      answer_2: answers[1],\n      answer_3: answers[2],\n      answer_4: answers[3],\n      answer_5: answers[4],\n      answer_6: answers[5],\n      answer_7: answers[6],\n      answer_8: answers[7],\n      answer_9: answers[8],\n      answer_10: answers[9],\n      is_correct_1: isCorrect[0],\n      is_correct_2: isCorrect[1],\n      is_correct_3: isCorrect[2],\n      is_correct_4: isCorrect[3],\n      is_correct_5: isCorrect[4],\n      is_correct_6: isCorrect[5],\n      is_correct_7: isCorrect[6],\n      is_correct_8: isCorrect[7],\n      is_correct_9: isCorrect[8],\n      is_correct_10: isCorrect[9],\n      submitted_at: submittedDate.toLocaleString('th-TH')\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "node-mockdata-generate",
+      "name": "Generate Mock Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        2180
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "exam_results",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "student_name": "={{ $json.student_name }}",
+            "grade_level": "={{ $json.grade_level }}",
+            "subject": "={{ $json.subject }}",
+            "test_name": "={{ $json.test_name }}",
+            "score": "={{ $json.score }}",
+            "total_score": "={{ $json.total_score }}",
+            "percentage": "={{ $json.percentage }}",
+            "pass_status": "={{ $json.pass_status }}",
+            "answer_1": "={{ $json.answer_1 }}",
+            "answer_2": "={{ $json.answer_2 }}",
+            "answer_3": "={{ $json.answer_3 }}",
+            "answer_4": "={{ $json.answer_4 }}",
+            "answer_5": "={{ $json.answer_5 }}",
+            "answer_6": "={{ $json.answer_6 }}",
+            "answer_7": "={{ $json.answer_7 }}",
+            "answer_8": "={{ $json.answer_8 }}",
+            "answer_9": "={{ $json.answer_9 }}",
+            "answer_10": "={{ $json.answer_10 }}",
+            "is_correct_1": "={{ $json.is_correct_1 }}",
+            "is_correct_2": "={{ $json.is_correct_2 }}",
+            "is_correct_3": "={{ $json.is_correct_3 }}",
+            "is_correct_4": "={{ $json.is_correct_4 }}",
+            "is_correct_5": "={{ $json.is_correct_5 }}",
+            "is_correct_6": "={{ $json.is_correct_6 }}",
+            "is_correct_7": "={{ $json.is_correct_7 }}",
+            "is_correct_8": "={{ $json.is_correct_8 }}",
+            "is_correct_9": "={{ $json.is_correct_9 }}",
+            "is_correct_10": "={{ $json.is_correct_10 }}",
+            "submitted_at": "={{ $json.submitted_at }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "node-mockdata-insert",
+      "name": "Insert Mock Data",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        2180
+      ]
+    },
+    {
+      "parameters": {
         "formTitle": "แบบทดสอบออนไลน์: วิชาวิทยาศาสตร์ ม.1",
         "formDescription": "เรื่อง หน่วยของสิ่งมีชีวิตและกระบวนการดำรงชีวิต (คะแนนเต็ม 10 คะแนน)",
         "formFields": {
@@ -463,6 +720,39 @@
   ],
   "pinData": {},
   "connections": {
+    "⚙️ Setup: กดตรงนี้เพื่อสร้างตาราง": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Setup: สร้างตาราง exam_results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎲 Setup: สร้างข้อมูลตัวอย่าง": {
+      "main": [
+        [
+          {
+            "node": "Generate Mock Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Mock Data": {
+      "main": [
+        [
+          {
+            "node": "Insert Mock Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "n8n Form Trigger": {
       "main": [
         []
