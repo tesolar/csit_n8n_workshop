@@ -1,0 +1,167 @@
+{
+  "name": "Workshop 3 - AI วิเคราะห์ผลสอบภาพรวม",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📊 Workshop 3: AI วิเคราะห์ผลสอบภาพรวม\n\n**กระบวนการทำงาน:**\n1. chat คุยเพื่อการวิเคราะห์ข้อมูล\n2. ดึงข้อมูลคะแนนสอบจากตาราง `exam_results`\n3. 🧮 **Prepare Analytics Data (Code)**: คำนวณสถิติเบื้องต้น (ค่าเฉลี่ย, สูงสุด, ต่ำสุด, อัตราผ่าน)\n4. 🤖 **AI Agent (Gemini)**: วิเคราะห์เชิงลึก สรุปจุดแข็ง-จุดอ่อน ค้นหากลุ่มเสี่ยง และเสนอแนะแผนการสอนสำหรับครู",
+        "height": 280,
+        "width": 812,
+        "color": 5
+      },
+      "id": "b606dd23-da9d-470c-af6e-34bd282eab36",
+      "name": "Sticky Note - ภาพรวมระบบ AI Analytics",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🤖 Prompt คำสั่งสั่งงาน AI Agent\n\nเราส่งข้อมูล 2 ส่วนให้ Gemini:\n1. **สถิติภาพรวม** ที่ Code Node คำนวณไว้ล่วงหน้า\n2. **ข้อมูลผลสอบรายบุคคล** ในรูปแบบ JSON\n\nGemini จะประมวลผลและสร้างรายงานการประเมิน 4 มิติ:\n- สถิติและข้อสังเกตภาพรวม\n- กลุ่มเสี่ยงและการแก้ไข\n- นักเรียนผลงานดีเด่น\n- แผนพัฒนาการจัดการเรียนรู้\n- อื่น ๆ ตามที่ต้องการ\n",
+        "height": 340,
+        "width": 468,
+        "color": 4
+      },
+      "id": "7aa36ba5-f63e-4fcd-9314-c341c23b975a",
+      "name": "Sticky Note - การวิเคราะห์ด้วย AI",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst records = items.map(i => i.json);\n\nif (!records || records.length === 0) {\n  return [{\n    json: {\n      error: \"ไม่มีข้อมูลผลสอบในตาราง exam_results กรุณาทำข้อสอบผ่านแบบฟอร์มก่อน\"\n    }\n  }];\n}\n\nconst totalStudents = records.length;\nconst totalScores = records.reduce((sum, r) => sum + Number(r.score), 0);\nconst avgScore = (totalScores / totalStudents).toFixed(2);\nconst maxScore = Math.max(...records.map(r => Number(r.score)));\nconst minScore = Math.min(...records.map(r => Number(r.score)));\nconst passCount = records.filter(r => r.pass_status === 'ผ่าน').length;\nconst failCount = totalStudents - passCount;\nconst passRate = ((passCount / totalStudents) * 100).toFixed(1);\n\nreturn [{\n  json: {\n    summary: {\n      subject: records[0].subject || 'วิทยาศาสตร์',\n      test_name: records[0].test_name || 'แบบทดสอบบทที่ 1',\n      total_students: totalStudents,\n      avg_score: avgScore,\n      max_score: maxScore,\n      min_score: minScore,\n      pass_count: passCount,\n      fail_count: failCount,\n      pass_rate: `${passRate}%`\n    },\n    students_data: records,\n    formatted_data_string: JSON.stringify(records, null, 2)\n  }\n}];"
+      },
+      "id": "25bafebb-9040-4cfd-8e04-c387148c6766",
+      "name": "Prepare Analytics Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=คุณคือผู้เชี่ยวชาญด้านการวัดผลและวิเคราะห์ข้อมูลทางการศึกษา (Educational Data Analyst & Pedagogical Specialist)\n\nจากข้อมูลสถิติและผลคะแนนสอบวิชา {{ $json.summary.subject }} ({{ $json.summary.test_name }}):\n\n[สถิติภาพรวม]\n- จำนวนนักเรียนทั้งหมด: {{ $json.summary.total_students }} คน\n- คะแนนเฉลี่ย: {{ $json.summary.avg_score }} คะแนน (จากคะแนนเต็ม 10)\n- คะแนนสูงสุด: {{ $json.summary.max_score }} คะแนน | ต่ำสุด: {{ $json.summary.min_score }} คะแนน\n- อัตราการสอบผ่าน: {{ $json.summary.pass_rate }} (ผ่าน {{ $json.summary.pass_count }} คน, ไม่ผ่าน {{ $json.summary.fail_count }} คน)\n\n[ข้อมูลคะแนนรายบุคคล]\n{{ $json.formatted_data_string }}\n\nโปรดจัดทำ \"รายงานสรุปผลการประเมินการเรียนรู้และข้อเสนอแนะเชิงลึกสำหรับครูผู้สอน\" ในรูปแบบ Markdown ภาษาไทยที่อ่านง่ายและจัดวางสวยงาม โดยครอบคลุม 4 มิติ:\n1. **บทสรุปผลสัมฤทธิ์ทางการเรียนภาพรวม**: ตีความคะแนนเฉลี่ยและการกระจายตัวของคะแนน\n2. **วิเคราะห์นักเรียนกลุ่มที่ต้องพัฒนาเร่งด่วน**: ระบุชื่อนักเรียนที่ไม่ผ่านเกณฑ์ พร้อมวิเคราะห์ปัญหาและแนวทางการสอนเสริมรายบุคคล\n3. **ชื่นชมนักเรียนกลุ่มผลการเรียนดีเด่น**: ระบุชื่อนักเรียนที่มีคะแนนยอดเยี่ยม และแนวทางส่งเสริมศักยภาพเพิ่มเติม\n4. **ข้อเสนอแนะเชิงกลยุทธ์สำหรับครูผู้สอน**: ปรับปรุงเนื้อหา วิธีการจัดการเรียนรู้ และข้อสอบสำหรับบทเรียนต่อไป",
+        "options": {}
+      },
+      "id": "0387ab54-1362-4250-a4da-ad185b74c331",
+      "name": "AI Report Generator (Gemini)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        672,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "id": "5255ef6e-98dc-40fe-aedf-f05fc29bae78",
+      "name": "Google Gemini Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        672,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "Sa0TBe8kdin6lxpf",
+          "mode": "list",
+          "cachedResultName": "exam_results",
+          "cachedResultUrl": "/projects/6YusMKDhcwUT6AcI/datatables/Sa0TBe8kdin6lxpf"
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        432
+      ],
+      "id": "43c5ce1d-e709-4d02-9cdb-e4ea032b44de",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -96,
+        544
+      ],
+      "id": "1418a383-40f2-469c-b29b-58413a348f2e",
+      "name": "When chat message received",
+      "webhookId": "6652201e-8bb7-4780-a3a6-a85e25e49240"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        352
+      ],
+      "id": "ad4adb7a-1a1f-4125-bcd7-17c39ef3724a",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Prepare Analytics Data": {
+      "main": [
+        []
+      ]
+    },
+    "Google Gemini Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        []
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        []
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9db37f77-d195-44bd-bc36-2a9c76a15c9e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a2eb877b73c5d6047d9e60b6c4949a106fa738704809a49c4c951793bed481ff"
+  },
+  "nodeGroups": [],
+  "id": "PPoofXeceXYq6JS5",
+  "tags": []
+}
