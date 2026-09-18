@@ -1,0 +1,311 @@
+{
+  "name": "Workshop 5 - LINE Chatbot ถามผลสอบ",
+  "nodes": [
+    {
+      "parameters": {
+        "events": [
+          "message"
+        ]
+      },
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessagingTrigger",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        -32
+      ],
+      "id": "bd0e653f-7f33-4b7a-9459-5cf4dffb5a21",
+      "name": "Line Messaging Trigger",
+      "webhookId": "399d0550-6945-4710-9549-00e800ec3131",
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "TIyniFPKseNncyBz",
+          "name": "Line Messaging account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 📱 Workshop 5: LINE Chatbot ถามผลสอบ\n\n**วัตถุประสงค์:**\nต่อยอด Data Table `exam_results` (Workshop 2/3) ให้ถามตอบได้ผ่านแอป LINE จริง พร้อม **คำแนะนำเชิงคุณภาพ/สิ่งที่ควรปรับปรุง** ไม่ใช่แค่รายงานคะแนนเฉย ๆ โดยใช้ Community Node `@aotoki/n8n-nodes-line-messaging`\n\n**วิธีทำงาน:**\n1. ผู้ใช้พิมพ์ถามใน LINE เช่น \"คะแนนของสมชาย\" หรือ \"ภาพรวมห้องนี้เป็นยังไงบ้าง\"\n2. **Line Messaging Trigger** รับ event (ตรวจสอบลายเซ็น + คัดกรอง event type ให้อัตโนมัติ)\n3. ดึงข้อมูลทั้งหมดจาก Data Table `exam_results`\n4. **เตรียมข้อมูลสำหรับ AI Agent** (Code) คำนวณสถิติภาพรวม + อัตราตอบผิดรายข้อ (ข้อไหนคนตอบผิดเยอะสุด) ล่วงหน้าให้แม่นยำ\n5. AI Agent (Gemini) อ่านสถิติ + ข้อมูลรายบุคคล + คำถาม แล้วตอบสั้น ๆ พร้อมคำแนะนำว่าควรปรับปรุง/ทบทวนเรื่องอะไร\n6. **Line Messaging** node (operation: Reply) ส่งคำตอบกลับด้วย `replyToken`\n\n**ก่อนใช้งาน:** ต้องมีข้อมูลใน Data Table `exam_results` ก่อน (ทำ Workshop 2 แบบ Data Table อย่างน้อย 1 ครั้ง)\n\n💡 ใช้ปุ่ม **Pin Data** บนโหนด Line Messaging Trigger (มีตัวอย่าง event จริงปักหมุดไว้แล้ว) เพื่อทดสอบต่อสายที่เหลือได้โดยไม่ต้องรอส่งข้อความจริงจากมือถือทุกครั้ง",
+        "height": 400,
+        "width": 560,
+        "color": 2
+      },
+      "id": "acfdb79d-1f62-4e74-b691-c49e5417197e",
+      "name": "Sticky Note - ภาพรวมและวิธีใช้งาน",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        -352
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔑 สิ่งที่ต้องตั้งค่าก่อนใช้งาน\n\n1. **ติดตั้ง Community Node**: n8n → Settings → Community Nodes → ติดตั้ง `@aotoki/n8n-nodes-line-messaging`\n2. **สร้าง LINE Messaging API Channel** ที่ [LINE Developers Console](https://developers.line.biz/console/) แล้วคัดลอก:\n   - `Channel access token` (Messaging API tab → Issue)\n   - `Channel secret` (Basic settings tab)\n3. **สร้าง Credential ใน n8n**: ค้นหา `Line Messaging API` แล้วกรอกทั้ง 2 ค่าด้านบน — ผูก Credential เดียวกันนี้กับทั้งโหนด **Line Messaging Trigger** และ **Line Messaging**\n4. **Activate workflow นี้** แล้วคัดลอก **Production webhook URL** จากโหนด **Line Messaging Trigger**\n5. นำ URL ไปวางที่ LINE Console → **Messaging API → Webhook settings → Webhook URL** แล้วกด **Verify** + เปิด **Use webhook**\n6. ปิด **Auto-reply messages** และ **Greeting messages** ใน LINE Console (กันชนกับบอทเรา)\n7. เพิ่มเพื่อน LINE OA ด้วย QR Code ในหน้า Console แล้วทดสอบพิมพ์คุย\n\n✅ โหนด Line Messaging Trigger ตรวจสอบ `X-Line-Signature` ด้วย Channel secret ให้อัตโนมัติอยู่แล้ว ไม่ต้องเขียนโค้ดตรวจเอง",
+        "height": 480,
+        "width": 560,
+        "color": 4
+      },
+      "id": "1fe5d77f-119c-4138-b960-c8fb2f8c454c",
+      "name": "Sticky Note - การตั้งค่า",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const event = $input.first().json;\n\n// Line Messaging Trigger ปลดปีก body.events ให้แล้ว event มาตรง ๆ ใน json\n// สนใจเฉพาะข้อความตัวอักษร ข้าม sticker/รูปภาพ/อื่น ๆ ใน demo นี้\nif (event.message?.type !== 'text') {\n  return [];\n}\n\nreturn [{\n  json: {\n    replyToken: event.replyToken,\n    userId: event.source?.userId,\n    userText: event.message.text\n  }\n}];"
+      },
+      "id": "2b3d7fa2-338b-4671-bf36-c838029ac365",
+      "name": "แยกข้อมูลจาก LINE Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "SbpOT7MtDoLaAaB5",
+          "mode": "list",
+          "cachedResultName": "exam_results",
+          "cachedResultUrl": "/projects/ViLj2OhWPm2Oq87T/datatables/SbpOT7MtDoLaAaB5"
+        }
+      },
+      "id": "320aa270-ebdf-4bca-8ece-befd3c6a395b",
+      "name": "Get row(s)",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst records = items.map(i => i.json);\nconst userText = $('แยกข้อมูลจาก LINE Event').first().json.userText;\n\n// ชื่อหัวข้อของข้อสอบ 10 ข้อ (เรียงตามลำดับเดียวกับ Workshop 2 \"Calculate Score\")\n// แก้ไขรายการนี้ให้ตรงกับข้อสอบจริง ถ้าเปลี่ยนชุดคำถามใน Workshop 2\nconst TOPICS = [\n  'หน่วยพื้นฐานของสิ่งมีชีวิต (เซลล์)',\n  'วัตถุดิบในการสังเคราะห์ด้วยแสง',\n  'จุดเดือดของน้ำบริสุทธิ์',\n  'ไมโทคอนเดรีย (Powerhouse of the Cell)',\n  'นิวเคลียส',\n  'ผนังเซลล์',\n  'กระบวนการสังเคราะห์ด้วยแสง',\n  'สิ่งมีชีวิตเซลล์เดียว',\n  'ระดับการจัดระเบียบของสิ่งมีชีวิต',\n  'การหายใจระดับเซลล์ (Cellular Respiration)'\n];\n\nif (records.length === 0) {\n  return [{\n    json: {\n      userText,\n      formatted_data_string: '[]',\n      stats_summary: 'ยังไม่มีข้อมูลผลสอบในระบบ'\n    }\n  }];\n}\n\nconst totalStudents = records.length;\nconst avgPercentage = records.reduce((s, r) => s + Number(r.percentage || 0), 0) / totalStudents;\nconst maxPercentage = Math.max(...records.map(r => Number(r.percentage || 0)));\nconst minPercentage = Math.min(...records.map(r => Number(r.percentage || 0)));\nconst passCount = records.filter(r => r.pass_status === 'ผ่าน').length;\nconst passRate = (passCount / totalStudents) * 100;\n\n// อัตราตอบผิดรายข้อ เพื่อชี้จุดที่ควรทบทวน/ปรับปรุงการสอนเพิ่ม\nconst wrongRatePerQuestion = [];\nfor (let q = 1; q <= 10; q++) {\n  const key = `is_correct_${q}`;\n  const withData = records.filter(r => r[key] !== undefined && r[key] !== '' && r[key] !== null);\n  if (withData.length === 0) continue;\n  const wrongCount = withData.filter(r => r[key] === false || r[key] === 'false').length;\n  wrongRatePerQuestion.push({\n    question: q,\n    topic: TOPICS[q - 1] || `ข้อ ${q}`,\n    wrong_rate_percent: Math.round((wrongCount / withData.length) * 100)\n  });\n}\nwrongRatePerQuestion.sort((a, b) => b.wrong_rate_percent - a.wrong_rate_percent);\n\nconst statsSummary = {\n  total_students: totalStudents,\n  avg_percentage: Math.round(avgPercentage * 10) / 10,\n  max_percentage: maxPercentage,\n  min_percentage: minPercentage,\n  pass_count: passCount,\n  pass_rate_percent: Math.round(passRate * 10) / 10,\n  wrong_rate_per_question_sorted_desc: wrongRatePerQuestion\n};\n\nreturn [{\n  json: {\n    userText,\n    formatted_data_string: JSON.stringify(records, null, 2),\n    stats_summary: JSON.stringify(statsSummary, null, 2)\n  }\n}];"
+      },
+      "id": "de66e548-6594-4fc7-894a-d47e7ed80d5f",
+      "name": "เตรียมข้อมูลสำหรับ AI Agent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=คุณคือผู้ช่วยครูที่ตอบคำถามเกี่ยวกับผลสอบของนักเรียน พร้อมให้คำแนะนำเชิงคุณภาพ จากข้อมูลตาราง exam_results ต่อไปนี้\n\n[สถิติภาพรวมที่คำนวณไว้ล่วงหน้าแล้ว — ใช้ตัวเลขจากส่วนนี้เท่านั้น ห้ามคำนวณเลขเองใหม่]\n{{ $json.stats_summary }}\n\n[ข้อมูลผลสอบรายบุคคล รวมคำตอบและถูก/ผิดรายข้อ (is_correct_1..10) รูปแบบ JSON]\n{{ $json.formatted_data_string }}\n\nคำถามจากผู้ใช้ทาง LINE: \"{{ $json.userText }}\"\n\nกฎการตอบ:\n- ตอบเป็นข้อความสั้น กระชับ อ่านง่ายบนแชท LINE ห้ามใช้ Markdown (เช่น **, #, ตาราง)\n- ถ้าถามถึงนักเรียนคนใดคนหนึ่ง: บอกคะแนน/เปอร์เซ็นต์และสถานะผ่าน/ไม่ผ่านก่อน แล้วต่อท้ายด้วยคำแนะนำสั้น ๆ ว่าควรปรับปรุงเรื่องอะไร โดยดูจากข้อที่นักเรียนคนนั้นตอบผิด (is_correct_x เป็น false)\n- ถ้าถามภาพรวม/คุณภาพของห้อง: สรุปค่าเฉลี่ย คะแนนสูงสุด-ต่ำสุด อัตราผ่านสั้น ๆ แล้วชี้ว่าข้อ/หัวข้อใดมีอัตราตอบผิดสูงสุด 1-3 อันดับแรก (จาก wrong_rate_per_question_sorted_desc) พร้อมข้อเสนอแนะว่าควรเน้นทบทวนเรื่องอะไรเพิ่ม\n- คำแนะนำต้องนำไปปฏิบัติได้จริง สุภาพ ให้กำลังใจ ไม่ตำหนิตัวนักเรียน\n- ถ้าหาข้อมูลที่ถามไม่เจอในรายการ ให้แจ้งว่าไม่พบข้อมูลอย่างสุภาพ",
+        "options": {}
+      },
+      "id": "83e872e5-ee58-450c-a6a1-9f82e4d22703",
+      "name": "AI Agent (ตอบคำถามผลสอบ)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        272,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-flash-latest",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "8d424f88-8fb7-4f78-8424-02440bf9365b",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        352,
+        192
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KCNl8nll2LdXHyBa",
+          "name": "Google Gemini(PaLM) Api account [TK]"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const replyToken = $('แยกข้อมูลจาก LINE Event').first().json.replyToken;\nconst replyText = $json.output;\n\nreturn [{\n  json: {\n    replyToken,\n    replyText\n  }\n}];"
+      },
+      "id": "f65569f5-359d-4be2-bf38-428a06d20dbf",
+      "name": "เตรียม Payload ตอบกลับ LINE",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "replyToken": "={{ $json.replyToken }}",
+        "messages": {
+          "values": [
+            {
+              "type": "textV2",
+              "text": "={{ $json.replyText }}"
+            }
+          ]
+        }
+      },
+      "type": "@aotoki/n8n-nodes-line-messaging.lineMessaging",
+      "typeVersion": 1,
+      "position": [
+        832,
+        -32
+      ],
+      "id": "a12267ed-eada-4074-b101-37022fed39b1",
+      "name": "Line Messaging",
+      "credentials": {
+        "lineMessagingApi": {
+          "id": "TIyniFPKseNncyBz",
+          "name": "Line Messaging account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Line Messaging Trigger": [
+      {
+        "json": {
+          "type": "message",
+          "message": {
+            "type": "text",
+            "id": "632348866150662469",
+            "quoteToken": "X3eM1JpzKtufFUp-CwJ1OGXutlVQce64wa3d1_CiSjTppohXwoC_QPVKRzrw-slE6eh9MI6Nn0UhOO0pUCNHb--uOjGIWTefT7J82IskIskjYg5TR7uaJgOtpHt9yXOmwNpJeE2yx5qotbq987UjmA",
+            "markAsReadToken": "ZC1Gw2U089lISpvpDeIZ3R6VC-ZJT-mPJp7D7jIPvWv-botYkmHlenT34Bb3f7m-PEz6QQDeXmXmL23LouDCYnH-9sUlhUjANzsieu2EniefeuesToRk16eR7K9jP9ER8w2zlqPMOsSZWBS1mDtsKM8zN5Wa-ChPBhAFSkr9DBcyciEzo3i900COalfnOl9YCYvHtLYAm3pwIKnh4VjnMw",
+            "text": "g"
+          },
+          "webhookEventId": "01M2TDMJQ5H8WV0YRJK73EZEZQ",
+          "deliveryContext": {
+            "isRedelivery": false
+          },
+          "timestamp": 1789740599523,
+          "source": {
+            "type": "user",
+            "userId": "Ubf59a0d268591e718eb9cbb7d1d26487"
+          },
+          "replyToken": "a8374934867f4f4ea4b1d36276331c6d",
+          "mode": "active",
+          "destination": "U70dafc26aa45d9b7eb6de1490164e065"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "แยกข้อมูลจาก LINE Event": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "เตรียมข้อมูลสำหรับ AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "เตรียมข้อมูลสำหรับ AI Agent": {
+      "main": [
+        [
+          {
+            "node": "AI Agent (ตอบคำถามผลสอบ)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent (ตอบคำถามผลสอบ)": {
+      "main": [
+        [
+          {
+            "node": "เตรียม Payload ตอบกลับ LINE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent (ตอบคำถามผลสอบ)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "เตรียม Payload ตอบกลับ LINE": {
+      "main": [
+        [
+          {
+            "node": "Line Messaging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Line Messaging Trigger": {
+      "main": [
+        [
+          {
+            "node": "แยกข้อมูลจาก LINE Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Line Messaging": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "859a6000-84b9-4356-a403-dfcbb9d24b46",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0fa674f74361e5e48819019fbd90ca5b45a2dc6ec8ce886505680a3ecdd679bb"
+  },
+  "nodeGroups": [],
+  "id": "D5qpHlJNIg0V6rrA",
+  "tags": []
+}
