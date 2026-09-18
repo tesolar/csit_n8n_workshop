@@ -1,5 +1,5 @@
 ARG N8N_VERSION=latest
-FROM docker.n8n.io/n8nio/n8n:${N8N_VERSION}
+FROM docker.io/n8nio/n8n:${N8N_VERSION}
 
 # NOTE: The official n8nio/n8n image is now built from Docker's "Hardened Images"
 # base, which ships WITHOUT a package manager (no apk/apt), so `RUN apk add ...`
