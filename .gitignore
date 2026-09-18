@@ -106,3 +106,4 @@ docker-compose.override.yml
 # Optional local exports/backups
 n8n_export_*.json
 n8n_backup_*
+data/output/*
