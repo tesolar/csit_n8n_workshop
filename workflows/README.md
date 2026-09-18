@@ -13,6 +13,7 @@
 | [`02_exam_form_to_postgres.json`](./02_exam_form_to_postgres.json) | **Workshop 2 (PostgreSQL): ระบบทำข้อสอบ** | n8n Form Trigger ➡️ คำนวณคะแนน (Code, เก็บคำตอบรายข้อด้วย) ➡️ บันทึกลง PostgreSQL ➡️ คืนผลลัพธ์ HTML Certificate — ตาราง Postgres นี้ปัจจุบัน Workshop 3 ไม่ได้อ่าน (อ่านจาก Data Table แทน) |
 | [`03_ai_exam_analytics.json`](./03_ai_exam_analytics.json) | **Workshop 3: AI วิเคราะห์ผลสอบจาก Database** | Manual Trigger ➡️ ดึงข้อมูลจาก **n8n Data Table** `exam_results` (กรอง + เรียงคะแนน) ➡️ สรุปสถิติ + อัตราตอบผิดรายข้อ ➡️ AI Agent (Gemini) สร้างรายงานเชิงลึก |
 | [`Workshop 4 - สรุปการประชุมด้วย AI จากไฟล์ Local.json`](./Workshop%204%20-%20สรุปการประชุมด้วย%20AI%20จากไฟล์%20Local.json) | **Workshop 4: สรุปการประชุมด้วย AI + จัดหมวดหมู่ไฟล์อัตโนมัติ** | Manual Trigger ➡️ อ่านไฟล์ `.txt` ทั้งหมดใน `data/input/` (bind mount `./data:/data`) ➡️ แปลงไฟล์เป็นข้อความ ➡️ AI Agent (Gemini) + Structured Output Parser ทำ 4 อย่างพร้อมกัน: ตรวจแก้คำผิด/คำตก, คัดข้อความไม่เกี่ยวข้องออก, สรุปให้สั้นกว่าต้นฉบับ, และจัดหมวดหมู่คณะทำงาน ➡️ เขียนไฟล์สรุปลง `data/output/<หมวดหมู่>/` อัตโนมัติ — มีไฟล์ตัวอย่างบันทึกการประชุม 15 ไฟล์ จาก 5 คณะทำงานที่ตำแหน่งต่าง ๆ ประชุมร่วมกันเป็นประจำ เตรียมไว้ให้ใน `data/input/` |
+| [`Workshop 5 - LINE Chatbot ถามผลสอบ.json`](./Workshop%205%20-%20LINE%20Chatbot%20ถามผลสอบ.json) | **Workshop 5: LINE Chatbot ถามผลสอบ + คำแนะนำปรับปรุง** | Community Node `@aotoki/n8n-nodes-line-messaging`: **Line Messaging Trigger** (ตรวจสอบ `X-Line-Signature` ให้อัตโนมัติ) ➡️ แยก `replyToken`/ข้อความจาก event (ข้าม event ที่ไม่ใช่ข้อความตัวอักษร) ➡️ ดึงข้อมูลจาก Data Table `exam_results` (ตารางเดียวกับ Workshop 2/3) ➡️ Code คำนวณสถิติภาพรวม + อัตราตอบผิดรายข้อล่วงหน้า ➡️ AI Agent (Gemini) ตอบคำถามสั้น ๆ พร้อม**คำแนะนำเชิงคุณภาพ**ว่าควรปรับปรุง/ทบทวนเรื่องอะไร (รายบุคคลดูจากข้อที่ตอบผิด, ภาพรวมดูจากข้อที่ทั้งห้องตอบผิดเยอะสุด) ➡️ **Line Messaging** node (operation: Reply) ส่งกลับผู้ใช้ — มีตัวอย่าง event จริงปักหมุด (Pin Data) ไว้ที่โหนด Trigger ให้ทดสอบต่อสายได้ทันทีโดยไม่ต้องรอข้อความจริง — ต้องติดตั้ง Community Node และตั้งค่า LINE Messaging API Channel ก่อน (ดู Sticky Note ในไฟล์) |
 
 ---
 
@@ -49,3 +50,10 @@
   - **Password**: `n8npass`
   - **Port**: `5432`
   - **SSL**: `Disable`
+
+### 4. LINE Messaging API (สำหรับ Workshop 5)
+- ติดตั้ง Community Node `@aotoki/n8n-nodes-line-messaging` ก่อน (n8n → **Settings → Community Nodes**)
+- สร้าง Channel ที่ [LINE Developers Console](https://developers.line.biz/console/) แล้วคัดลอก **Channel access token** และ **Channel secret**
+- ไปที่ **Credentials** ใน n8n ➡️ กด **Add Credential** ➡️ ค้นหา `Line Messaging API`
+- กรอก **Channel Access Token** และ **Channel Secret** แล้วผูก Credential เดียวกันนี้กับทั้งโหนด **Line Messaging Trigger** และ **Line Messaging**
+- n8n ต้องมี URL แบบ HTTPS ที่ LINE ยิง webhook เข้ามาถึงได้ (เช่น deploy จริง หรือ tunnel เช่น ngrok/cloudflared ระหว่าง demo) — ดูรายละเอียดใน Sticky Note ของไฟล์ Workshop 5
